@@ -1,0 +1,7 @@
+[project]
+name = "aws-api"
+version = "0.1.3"
+description = "AWS API MCP Server"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["boto3>=1.37.18", "mcp[cli]>=1.5.0"]

@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "aws-api": {
+            "command": "wsl.exe",
+            "args": [
+                "bash",
+                "-c",
+                "/home/havoc24k/.local/bin/uv --directory /home/havoc24k/projects/mcp/aws-mcp-server run aws_api.py"
+            ]
+        }
+    }
+}
