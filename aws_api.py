@@ -1,7 +1,9 @@
 from typing import Any
 import boto3
 import os
+import json
 from mcp.server.fastmcp import FastMCP
+from aws_mcp import filesystem as fs
 
 # code_extensions = ('.py', '.js', '.ts', '.go', '.java', '.c', '.cpp', '.h', '.html', '.css', '.json','.yaml', '.yml', '.xml', '.sql', '.sh', '.bash', '.rb', '.php', '.swift', '.pl', '.r', '.tf')
 
@@ -11,7 +13,7 @@ code_extensions = ('.mjs', '.tf')
 mcp = FastMCP("aws-api")
 
 
-@mcp.resource("config://aws")
+@mcp.resource("awsconfig://")
 def get_aws_config() -> dict:
     """
     Get the AWS configuration from the user's home directory.
@@ -24,7 +26,7 @@ def get_aws_config() -> dict:
     return config
 
 
-@mcp.resource("local://projects")
+@mcp.resource("projects://")
 def list_local_projects() -> list:
     """
     List all folders in the ~/projects folder
@@ -38,31 +40,28 @@ def list_local_projects() -> list:
 
 @mcp.tool(
     name="list-local-folder",
-    description="List all folders in the path"
-)
-def list_local_folder(path: str) -> list:
-    """
+    description="""
     List all folders in the path
 
     Returns:
         dict: A list containing the names of all folders in the path folder.
     """
+)
+def list_local_folder(path: str) -> list:
     # Get a list of all folders in the ~/projects folder
     return os.listdir(os.path.expanduser(path))
 
 
 @mcp.tool(
     name="read-local-folder",
-    description="Read all code files in the path and return the content as aa response an LLM can understand."
-)
-def read_local_folder(path: str) -> str:
-    """
+    description="""
     Read all code files in the path and return the content as aa response an LLM can understand.
 
     Returns:
         str: A string containing the content of all code files in the path folder.
     """
-
+)
+def read_local_folder(path: str) -> str:
     # Read all files recursively in the path
     content = ""
     for root, _, files in os.walk(os.path.expanduser(path)):
@@ -82,15 +81,14 @@ def read_local_folder(path: str) -> str:
 
 @mcp.tool(
     name="s3-list_buckets",
-    description="Get a list of all S3 buckets in the account."
-)
-async def s3_list_buckets(profile_name: str, region: str) -> dict:
-    """
+    description="""
     Get a list of all S3 buckets in the account.
 
     Args:
         profile_name (str): The name of the AWS profile to use.
     """
+)
+async def s3_list_buckets(profile_name: str, region: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client('s3', region_name=region)
@@ -100,16 +98,15 @@ async def s3_list_buckets(profile_name: str, region: str) -> dict:
 
 @mcp.tool(
     name="s3-list_objects",
-    description="Get a list of all objects in the specified S3 bucket."
-)
-async def s3_list_objects(profile_name: str, region: str, bucket_name: str) -> dict:
-    """
+    description="""
     Get a list of all objects in the specified S3 bucket.
 
     Args:
         profile_name (str): The name of the AWS profile to use.
         bucket_name (str): The name of the S3 bucket.
     """
+)
+async def s3_list_objects(profile_name: str, region: str, bucket_name: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client('s3', region_name=region)
@@ -119,10 +116,7 @@ async def s3_list_objects(profile_name: str, region: str, bucket_name: str) -> d
 
 @mcp.tool(
     name="ce-get_cost_and_usage",
-    description="Get the monthly cost of the AWS account."
-)
-async def ce_get_cost_and_usage(profile_name: str, region: str, group_by: str, start: str, end: str) -> dict:
-    """
+    description="""
     Get the monthly cost of the AWS account.
 
     Args:
@@ -132,6 +126,8 @@ async def ce_get_cost_and_usage(profile_name: str, region: str, group_by: str, s
         start (str): The start date for the cost report in YYYY-MM-DD format.
         end (str): The end date for the cost report in YYYY-MM-DD format.
     """
+)
+async def ce_get_cost_and_usage(profile_name: str, region: str, group_by: str, start: str, end: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ce = session.client('ce', region_name=region)
@@ -154,10 +150,7 @@ async def ce_get_cost_and_usage(profile_name: str, region: str, group_by: str, s
 
 @mcp.tool(
     name="ce-get_cost_and_usage-with-resources",
-    description="Get the monthly cost of the AWS account with resources."
-)
-async def ce_get_cost_and_usage_with_resources(profile_name: str, region: str, group_by: str, start: str, end: str) -> dict:
-    """
+    description="""
     Get the monthly cost of the AWS account with resources.
 
     Args:
@@ -167,6 +160,8 @@ async def ce_get_cost_and_usage_with_resources(profile_name: str, region: str, g
         start (str): The start date for the cost report in YYYY-MM-DD format.
         end (str): The end date for the cost report in YYYY-MM-DD format.
     """
+)
+async def ce_get_cost_and_usage_with_resources(profile_name: str, region: str, group_by: str, start: str, end: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ce = session.client('ce', region_name=region)
@@ -189,10 +184,7 @@ async def ce_get_cost_and_usage_with_resources(profile_name: str, region: str, g
 
 @mcp.tool(
     name="cloudwatch-get_metric-statistics",
-    description="Get the specified metric statistics for the specified metric name."
-)
-async def cloudwatch_get_metric_statistics(profile_name: str, region: str, metric_name: str, namespace: str, start_time: str, end_time: str, period: int) -> dict:
-    """
+    description="""
     Get the specified metric statistics for the specified metric name.
 
     Args:
@@ -204,6 +196,8 @@ async def cloudwatch_get_metric_statistics(profile_name: str, region: str, metri
         end_time (str): The end time for the statistics in ISO 8601 format.
         period (int): The granularity, in seconds, of the returned data points.
     """
+)
+async def cloudwatch_get_metric_statistics(profile_name: str, region: str, metric_name: str, namespace: str, start_time: str, end_time: str, period: int) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     cloudwatch = session.client('cloudwatch', region_name=region)
@@ -220,16 +214,16 @@ async def cloudwatch_get_metric_statistics(profile_name: str, region: str, metri
 
 @mcp.tool(
     name="ec2-describe_instances",
-    description="Get a list of all EC2 instances in the account."
-)
-async def ec2_describe_instances(profile_name: str, region: str) -> dict:
-    """
+    description="""
     Get a list of all EC2 instances in the account."
 
     Args:
         profile_name (str): The name of the AWS profile to use.
         region (str): The AWS region to use.
     """
+)
+async def ec2_describe_instances(profile_name: str, region: str) -> dict:
+
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client('ec2', region_name=region)
@@ -239,16 +233,15 @@ async def ec2_describe_instances(profile_name: str, region: str) -> dict:
 
 @mcp.tool(
     name="ec2-describe_security_groups",
-    description="Get a list of all security groups in the account."
-)
-async def ec2_describe_security_groups(profile_name: str, region: str) -> dict:
-    """
+    description="""
     Get a list of all security groups in the account.
 
     Args:
         profile_name (str): The name of the AWS profile to use.
         region (str): The AWS region to use.
     """
+)
+async def ec2_describe_security_groups(profile_name: str, region: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client('ec2', region_name=region)
@@ -258,16 +251,15 @@ async def ec2_describe_security_groups(profile_name: str, region: str) -> dict:
 
 @mcp.tool(
     name="ec2-describe_vpcs",
-    description="Get a list of all VPCs in the account."
-)
-async def ec2_describe_vpcs(profile_name: str, region: str) -> dict:
-    """
+    description="""
     Get a list of all VPCs in the account."
 
     Args:
         profile_name (str): The name of the AWS profile to use.
         region (str): The AWS region
     """
+)
+async def ec2_describe_vpcs(profile_name: str, region: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client('ec2', region_name=region)
@@ -277,16 +269,15 @@ async def ec2_describe_vpcs(profile_name: str, region: str) -> dict:
 
 @mcp.tool(
     name="rds-describe_db_instances",
-    description="Get a list of all RDS instances in the account."
-)
-async def rds_describe_db_instances(profile_name: str, region: str) -> dict:
-    """
+    description="""
     Get a list of all RDS instances in the account.
 
     Args:
         profile_name (str): The name of the AWS profile to use.
         region (str): The AWS region to use.
     """
+)
+async def rds_describe_db_instances(profile_name: str, region: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     rds = session.client('rds', region_name=region)
@@ -295,11 +286,8 @@ async def rds_describe_db_instances(profile_name: str, region: str) -> dict:
 
 
 @mcp.tool(
-    name="rds-describe_db_clusters",
-    description="Get a list of all RDS clusters in the account."
-)
-async def read_terraform_remote_state(profile_name: str, region: str, bucket: str) -> dict:
-    """
+    name="read-terraform-remote-state",
+    description="""
     Read the Terraform remote state from an S3 bucket.
 
     Args:
@@ -307,12 +295,46 @@ async def read_terraform_remote_state(profile_name: str, region: str, bucket: st
         region (str): The AWS region to use.
         bucket (str): The name of the S3 bucket containing the Terraform remote state.
     """
+)
+async def read_terraform_remote_state(profile_name: str, region: str, bucket: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client('s3', region_name=region)
     response = s3.get_object(Bucket=bucket, Key='terraform.tfstate')
     return response['Body'].read().decode('utf-8')
 
+
+@mcp.tool(
+    name="aws_sdk_wrapper",
+    description="""
+    A generic AWS SDK wrapper to call any AWS service and operation.
+
+    Never execute this command to create update or delete resources in AWS. This is only for read-only operations.
+    Args:
+        service_name (str): The name of the AWS service to call (e.g. 's3', 'ec2', 'rds', etc.).
+        operation_name (str): The name of the operation to call (e.g. 'list_buckets', 'describe_instances', etc.).
+        region_name (str): The AWS region to use.
+        profile_name (str): The name of the AWS profile to use.
+        operation_kwargs (dict): The arguments to pass to the operation.
+    Returns:
+        Any: The response from the AWS service.
+    Example:
+        aws_sdk_wrapper('ce', 'get_cost_and_usage_with_resources', region_name='us-east-1', profile_name='my_profile', operation_kwargs={'TimePeriod': {'Start': '2023-01-01', 'End': '2023-01-31'}, 'Granularity': 'MONTHLY', 'GroupBy': [{'Type': 'DIMENSION', 'Key': 'SERVICE'}], 'Metrics': ['BlendedCost']})
+    """
+)
+async def aws_sdk_wrapper(
+    service_name: str,
+    operation_name: str,
+    region_name: str,
+    profile_name: str,
+    operation_kwargs: dict[str, Any],
+) -> Any:
+    # Get the AWS credentials
+    session = boto3.Session(profile_name=profile_name)
+    client = session.client(service_name, region_name=region_name)
+    method = getattr(client, operation_name)
+    response = method(**operation_kwargs)
+    return response
 
 if __name__ == "__main__":
     # Initialize and run the server
