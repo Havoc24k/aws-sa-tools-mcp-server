@@ -1,6 +1,9 @@
 import os
 from aws_mcp.mcp import mcp
 
+code_extensions = ('.mjs', '.tf', '.js', '.ts', '.py', '.go', '.java', '.c',
+                   '.cpp', '.h', '.html', '.css', '.scss', '.json', '.yaml', '.yml', '.xml')
+
 
 @mcp.tool(
     name="list-local-folder",
@@ -26,7 +29,6 @@ def list_local_folder(path: str) -> list:
     """
 )
 def read_local_folder(path: str) -> str:
-    code_extensions = ('.mjs', '.tf')
     # Read all files recursively in the path
     content = ""
     for root, _, files in os.walk(os.path.expanduser(path)):
