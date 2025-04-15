@@ -1,6 +1,6 @@
 from typing import Any
 import boto3
-from . import mcp
+from aws_mcp.mcp import mcp
 
 
 @mcp.tool(

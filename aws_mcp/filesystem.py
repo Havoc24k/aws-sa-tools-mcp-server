@@ -1,5 +1,5 @@
 import os
-from . import mcp
+from aws_mcp.mcp import mcp
 
 
 @mcp.tool(

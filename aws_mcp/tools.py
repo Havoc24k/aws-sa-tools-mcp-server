@@ -1,8 +1,9 @@
 import boto3
-from . import mcp
+from typing import Any
+from aws_mcp.mcp import mcp
 
 
-@mcp.resource("awsconfig://")
+@mcp.resource("resource://aws_config")
 def get_aws_config() -> dict:
     """
     Get the AWS configuration from the user's home directory.
