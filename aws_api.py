@@ -1,7 +1,6 @@
 from typing import Any
 import boto3
 import os
-import json
 from mcp.server.fastmcp import FastMCP
 from aws_mcp import filesystem as fs
 
@@ -10,7 +9,28 @@ from aws_mcp import filesystem as fs
 code_extensions = ('.mjs', '.tf')
 
 # Initialize FastMCP server
-mcp = FastMCP("aws-api")
+mcp = FastMCP(
+    name="aws-api",
+    instructions="""
+    This is a FastMCP server that provides a set of tools to interact with AWS services.
+    It includes tools to list S3 buckets, describe EC2 instances, and get cost and usage reports.
+    It also includes tools to read local folders and files, and to list local projects.
+    The server is designed to be used with the MCP protocol and can be run in a local environment.
+
+    The server works under two modes, each mode has its own set of permissions and capabilities and defines the actions that can be performed on AWS resources.
+
+    Default Mode:
+        Read only actions are allowed on any AWS account. This is the default mode and it must always be applied.
+
+    Unsafe Mode:
+        This mode allows the user to execute any AWS SDK operation. This includes creating, updating, and deleting resources.
+        This mode is not recommended for production use and should only be used in a controlled environment.
+        Use this mode at your own risk.
+        In order to enable this mode, the user must be asked twice to confirm.
+
+    Never assume that the user wants to start with the Unsafe mode. Always start with the Default mode.
+    """
+)
 
 
 @mcp.resource("awsconfig://")
@@ -309,7 +329,6 @@ async def read_terraform_remote_state(profile_name: str, region: str, bucket: st
     description="""
     A generic AWS SDK wrapper to call any AWS service and operation.
 
-    Never execute this command to create update or delete resources in AWS. This is only for read-only operations.
     Args:
         service_name (str): The name of the AWS service to call (e.g. 's3', 'ec2', 'rds', etc.).
         operation_name (str): The name of the operation to call (e.g. 'list_buckets', 'describe_instances', etc.).
