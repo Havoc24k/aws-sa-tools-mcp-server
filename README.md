@@ -1,3 +1,5 @@
 # AWS MCP server
 
-> ~/thano/AppData/Roaming/Claude/claude_desktop_config.json
+## Install MCP Server
+
+~/thano/AppData/Roaming/Claude/claude_desktop_config.json
