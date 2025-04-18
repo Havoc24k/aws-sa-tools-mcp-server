@@ -15,7 +15,6 @@ code_extensions = ('.mjs', '.tf', '.js', '.ts', '.py', '.go', '.java', '.c',
     """
 )
 def list_local_folder(path: str) -> list:
-    # Get a list of all folders in the ~/projects folder
     return os.listdir(os.path.expanduser(path))
 
 
@@ -34,12 +33,9 @@ def list_local_folder(path: str) -> list:
     """
 )
 def read_local_folder(path: str) -> str:
-    # Read all files recursively in the path
     content = ""
     for root, _, files in os.walk(os.path.expanduser(path)):
         for file in files:
-            # Read the content of the file only if it is a code file
-            # Ignore node_modules, .git, .terraform, and .idea folders
             if 'node_modules' in root or '.git' in root or '.terraform' in root or '.idea' in root:
                 continue
             if file.endswith(code_extensions):
