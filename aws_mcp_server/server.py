@@ -1,15 +1,5 @@
 import argparse
-from aws_mcp.mcp import mcp
-from aws_mcp import (
-    ce,
-    cloudwatch,
-    ec2,
-    filesystem,
-    rds,
-    s3,
-    terraform,
-    tools
-)
+from aws_mcp_server.mcp import mcp
 
 
 def main():

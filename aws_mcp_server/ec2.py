@@ -1,5 +1,5 @@
 import boto3
-from aws_mcp.mcp import mcp
+from aws_mcp_server.mcp import mcp
 
 
 @mcp.tool(

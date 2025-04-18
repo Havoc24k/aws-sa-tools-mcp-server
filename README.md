@@ -43,13 +43,12 @@ Configure your Claude Desktop settings by adding the following to `claude_deskto
 ```json
 {
     "mcpServers": {
-        "aws-api": {
-            "command": "uv",
+        "aws-mcp-server": {
+            "command": "uvx",
             "args": [
                 "--directory",
                 "/path/to/aws-mcp-server",
-                "run",
-                "server.py"
+                ".",
             ]
         }
     }
@@ -61,12 +60,12 @@ Configure your Claude Desktop settings by adding the following to `claude_deskto
 ```json
 {
     "mcpServers": {
-        "aws-api": {
+        "aws-mcp-server": {
             "command": "wsl.exe",
             "args": [
                 "bash",
                 "-c",
-                "uv --directory /path/to/aws-mcp-server run server.py"
+                "uvx --directory /path/to/aws-mcp-server ."
             ]
         }
     }

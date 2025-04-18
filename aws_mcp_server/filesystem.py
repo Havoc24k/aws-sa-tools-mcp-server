@@ -1,5 +1,5 @@
 import os
-from aws_mcp.mcp import mcp
+from aws_mcp_server.mcp import mcp
 
 code_extensions = ('.mjs', '.tf', '.js', '.ts', '.py', '.go', '.java', '.c',
                    '.cpp', '.h', '.html', '.css', '.scss', '.json', '.yaml', '.yml', '.xml')
