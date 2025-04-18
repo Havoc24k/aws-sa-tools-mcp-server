@@ -23,9 +23,14 @@ def list_local_folder(path: str) -> list:
     name="read-local-folder",
     description="""
     Read all code files in the path and return the content as aa response an LLM can understand.
+    Supports the following file extensions: .mjs, .tf, .js, .ts, .py, .go, .java, .c, .cpp, .h, .html, .css, .scss, .json, .yaml, .yml, and .xml.
+    Ignores node_modules, .git, .terraform, and .idea folders.
+
+    Args:
+        path (str): The path to the folder to read.
 
     Returns:
-        str: A string containing the content of all code files in the path folder.
+        str: A string containing the content of scanned code files in the path folder.
     """
 )
 def read_local_folder(path: str) -> str:

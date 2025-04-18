@@ -3,7 +3,7 @@ from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
 mcp = FastMCP(
-    name="aws-api",
+    name="aws-mcp-server",
     instructions="""
     This is a FastMCP server that provides a set of tools to interact with AWS services.
     It includes tools to list S3 buckets, describe EC2 instances, and get cost and usage reports.

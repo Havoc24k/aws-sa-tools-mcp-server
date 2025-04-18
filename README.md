@@ -4,6 +4,10 @@ A Model Context Protocol (MCP) server that provides tools to interact with AWS s
 
 ## Features
 
+### AWS SDK tools
+
+These are the main features of the AWS MCP server that you can use to interact with AWS services. If something is not listed here, it can be supported by the `aws_sdk_wrapper()` tool in `aws_mcp_server.tools`, assuming the AWS SDK supports it and that the LLM can properly create the command.
+
 - **S3 Operations**
   - List buckets
   - List objects in buckets
@@ -22,6 +26,8 @@ A Model Context Protocol (MCP) server that provides tools to interact with AWS s
 
 - **CloudWatch**
   - Retrieve metric statistics
+
+### Auxiliary Tools
 
 - **Local File System**
   - List local folders
