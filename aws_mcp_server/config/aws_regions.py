@@ -1,6 +1,6 @@
 """AWS region configurations and utilities."""
 
-from typing import Dict, List, Set
+from typing import Any
 
 # AWS regions organized by geographic area
 AWS_REGIONS = {

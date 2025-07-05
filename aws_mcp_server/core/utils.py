@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:

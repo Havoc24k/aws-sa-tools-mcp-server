@@ -1,7 +1,7 @@
 """Configuration settings for AWS MCP server."""
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class Settings:

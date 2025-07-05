@@ -1,7 +1,7 @@
 """AWS authentication utilities."""
 
 import os
-from typing import List, Optional
+from typing import Any
 
 import boto3
 
