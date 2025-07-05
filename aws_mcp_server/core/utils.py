@@ -113,10 +113,10 @@ def merge_filters(base_filters: Optional[Dict[str, Any]],
         Merged filter dictionary
     """
     if not base_filters and not additional_filters:
-        return None
+        return {}
     
     if not base_filters:
-        return additional_filters
+        return additional_filters or {}
     
     if not additional_filters:
         return base_filters
