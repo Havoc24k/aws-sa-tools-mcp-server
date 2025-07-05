@@ -1,5 +1,7 @@
 from typing import Any, Optional
+
 import boto3
+
 from ...mcp import mcp
 
 
@@ -14,12 +16,12 @@ from ...mcp import mcp
 
     **Required Parameters:**
     - profile_name (str): AWS profile name from ~/.aws/credentials
-    
+
     **Optional Parameters:**
     - region (str): AWS region (not used for bucket listing but required for consistency)
 
     **Response includes:** Bucket name, creation date, and owner information.
-    
+
     **Common Use Cases:**
     1. Storage inventory and auditing
     2. Cost analysis preparation
@@ -27,14 +29,14 @@ from ...mcp import mcp
     4. Cross-region bucket discovery
     5. Backup and disaster recovery planning
 
-    **Note:** This operation lists all buckets regardless of region. Use s3-list_objects_v2 
+    **Note:** This operation lists all buckets regardless of region. Use s3-list_objects_v2
     to explore bucket contents and get region-specific bucket information.
-    """
+    """,
 )
 async def s3_list_buckets(profile_name: str, region: str) -> dict:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
-    s3 = session.client('s3', region_name=region)
+    s3 = session.client("s3", region_name=region)
     response = s3.list_buckets()
     return response
 
@@ -59,25 +61,25 @@ async def s3_list_buckets(profile_name: str, region: str) -> dict:
       * 'logs/' - List all objects in logs folder
       * 'images/2024/' - List objects in images/2024 path
       * 'backup-' - List objects starting with 'backup-'
-    
+
     - delimiter (str): Character for hierarchical grouping (typically '/')
       * Use '/' for folder-like navigation
       * Returns CommonPrefixes for "folders"
       * Enables efficient directory-style browsing
-    
+
     - max_keys (int): Limit results per request (1-1000)
       * Default: 1000 (AWS maximum)
       * Use smaller values for memory efficiency
       * Combine with pagination for large datasets
-    
+
     - continuation_token (str): Token from previous response for pagination
       * Use NextContinuationToken from previous call
       * Enables seamless pagination through large buckets
-    
+
     - start_after (str): Start listing after this key name
       * Useful for resuming interrupted operations
       * Lexicographically ordered starting point
-    
+
     - fetch_owner (bool): Include owner information in response
       * Default: false (for performance)
       * Set to true for detailed ownership data
@@ -93,41 +95,41 @@ async def s3_list_buckets(profile_name: str, region: str) -> dict:
 
     **Response includes:** Object keys, sizes, last modified dates, ETags, storage classes,
     and optionally owner information. Also includes CommonPrefixes for folder-like structures.
-    
+
     **Performance Tips:**
     - Use prefix filtering to reduce response size
     - Implement pagination for buckets with >1000 objects
     - Use delimiter for efficient folder navigation
     - Consider fetch_owner=false for better performance
-    """
+    """,
 )
 async def s3_list_objects_v2(
-    profile_name: str, 
-    region: str, 
+    profile_name: str,
+    region: str,
     bucket_name: str,
-    prefix: Optional[str] = None,
-    delimiter: Optional[str] = None,
-    max_keys: Optional[int] = None,
-    continuation_token: Optional[str] = None,
-    start_after: Optional[str] = None,
-    fetch_owner: Optional[bool] = None
+    prefix: str | None = None,
+    delimiter: str | None = None,
+    max_keys: int | None = None,
+    continuation_token: str | None = None,
+    start_after: str | None = None,
+    fetch_owner: bool | None = None,
 ) -> dict:
     session = boto3.Session(profile_name=profile_name)
-    s3 = session.client('s3', region_name=region)
-    
-    params = {'Bucket': bucket_name}
+    s3 = session.client("s3", region_name=region)
+
+    params = {"Bucket": bucket_name}
     if prefix:
-        params['Prefix'] = prefix
+        params["Prefix"] = prefix
     if delimiter:
-        params['Delimiter'] = delimiter
+        params["Delimiter"] = delimiter
     if max_keys:
-        params['MaxKeys'] = max_keys
+        params["MaxKeys"] = max_keys
     if continuation_token:
-        params['ContinuationToken'] = continuation_token
+        params["ContinuationToken"] = continuation_token
     if start_after:
-        params['StartAfter'] = start_after
+        params["StartAfter"] = start_after
     if fetch_owner is not None:
-        params['FetchOwner'] = fetch_owner
-    
+        params["FetchOwner"] = fetch_owner
+
     response = s3.list_objects_v2(**params)
     return response

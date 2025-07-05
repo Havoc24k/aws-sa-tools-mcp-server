@@ -1,5 +1,7 @@
-import boto3
 from typing import Any
+
+import boto3
+
 from ...mcp import mcp
 
 
@@ -31,7 +33,7 @@ def get_aws_config() -> dict:
         Any: The response from the AWS service.
     Example:
         aws_sdk_wrapper('ce', 'get_cost_and_usage_with_resources', region_name='us-east-1', profile_name='my_profile', operation_kwargs={'TimePeriod': {'Start': '2023-01-01', 'End': '2023-01-31'}, 'Granularity': 'MONTHLY', 'GroupBy': [{'Type': 'DIMENSION', 'Key': 'SERVICE'}], 'Metrics': ['BlendedCost']})
-    """
+    """,
 )
 async def aws_sdk_wrapper(
     service_name: str,

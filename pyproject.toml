@@ -23,3 +23,27 @@ dev = [
 
 [project.scripts]
 "aws-mcp-server" = "aws_mcp_server.server:main"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+]
+
+ignore = [
+    "E501",   # Line too long, handled by formatter
+    "F401",   # Module imported but unused (needed for MCP tool registration)
+]
+
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["S101"]

@@ -3,12 +3,13 @@
 
 class AWSMCPError(Exception):
     """Base exception for AWS MCP server errors."""
+
     pass
 
 
 class InvalidProfileError(AWSMCPError):
     """Raised when an invalid AWS profile is specified."""
-    
+
     def __init__(self, profile_name: str):
         self.profile_name = profile_name
         super().__init__(f"Invalid or inaccessible AWS profile: {profile_name}")
@@ -16,7 +17,7 @@ class InvalidProfileError(AWSMCPError):
 
 class InvalidRegionError(AWSMCPError):
     """Raised when an invalid AWS region is specified."""
-    
+
     def __init__(self, region: str):
         self.region = region
         super().__init__(f"Invalid AWS region: {region}")
@@ -24,7 +25,7 @@ class InvalidRegionError(AWSMCPError):
 
 class AWSServiceError(AWSMCPError):
     """Raised when an AWS service operation fails."""
-    
+
     def __init__(self, service: str, operation: str, error_message: str):
         self.service = service
         self.operation = operation
@@ -34,7 +35,7 @@ class AWSServiceError(AWSMCPError):
 
 class ParameterValidationError(AWSMCPError):
     """Raised when parameter validation fails."""
-    
+
     def __init__(self, parameter: str, message: str):
         self.parameter = parameter
         self.message = message
