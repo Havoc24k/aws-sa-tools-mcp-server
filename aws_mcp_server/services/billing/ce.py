@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 import boto3
-from typing import Optional, List, Dict, Any
+
 from ...mcp import mcp
 
 
@@ -26,31 +28,31 @@ from ...mcp import mcp
       * 'DAILY': Day-by-day cost breakdown (max 12 months)
       * 'MONTHLY': Month-by-month cost breakdown (max 12 months)
       * 'HOURLY': Hour-by-hour cost breakdown (max 1 week)
-    
+
     - group_by (List[Dict[str, str]]): Grouping dimensions for cost analysis
       **Service Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'SERVICE'}] - Group by AWS service
-      
+
       **Account Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'LINKED_ACCOUNT'}] - Group by AWS account
-      
+
       **Geographic Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'REGION'}] - Group by AWS region
       [{'Type': 'DIMENSION', 'Key': 'AVAILABILITY_ZONE'}] - Group by AZ
-      
+
       **Resource Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'INSTANCE_TYPE'}] - Group by EC2 instance type
       [{'Type': 'DIMENSION', 'Key': 'USAGE_TYPE'}] - Group by usage type
       [{'Type': 'DIMENSION', 'Key': 'OPERATION'}] - Group by operation
-      
+
       **Tag-based Grouping:**
       [{'Type': 'TAG', 'Key': 'Environment'}] - Group by Environment tag
       [{'Type': 'TAG', 'Key': 'Project'}] - Group by Project tag
       [{'Type': 'TAG', 'Key': 'Owner'}] - Group by Owner tag
-      
+
       **Multiple Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'SERVICE'}, {'Type': 'TAG', 'Key': 'Environment'}]
-    
+
     - metrics (List[str]): Cost metrics to retrieve. Default: ['BlendedCost']
       * 'BlendedCost': Cost after applying Reserved Instance and Savings Plans discounts
       * 'UnblendedCost': On-demand cost without discounts
@@ -58,23 +60,23 @@ from ...mcp import mcp
       * 'NetUnblendedCost': UnblendedCost minus credits and refunds
       * 'UsageQuantity': Usage amount (hours, GB, requests, etc.)
       * 'NormalizedUsageAmount': Usage normalized to equivalent units
-    
+
     - filter_expression (Dict[str, Any]): Advanced filtering for targeted analysis
       **Service Filters:**
       {'Dimensions': {'Key': 'SERVICE', 'Values': ['Amazon Elastic Compute Cloud - Compute']}}
-      
+
       **Account Filters:**
       {'Dimensions': {'Key': 'LINKED_ACCOUNT', 'Values': ['123456789012']}}
-      
+
       **Region Filters:**
       {'Dimensions': {'Key': 'REGION', 'Values': ['us-east-1', 'us-west-2']}}
-      
+
       **Tag Filters:**
       {'Tags': {'Key': 'Environment', 'Values': ['production', 'staging']}}
-      
+
       **Complex Filters (AND/OR/NOT):**
       {'And': [{'Dimensions': {'Key': 'SERVICE', 'Values': ['EC2']}}, {'Tags': {'Key': 'Environment', 'Values': ['production']}}]}
-    
+
     - next_page_token (str): Pagination token from previous response
       * Use NextPageToken from previous call for large datasets
 
@@ -95,35 +97,35 @@ from ...mcp import mcp
     - Combine dimension and tag grouping for detailed insights
     - Use pagination for large datasets
     - Consider NetBlendedCost for accurate cost reporting
-    """
+    """,
 )
 async def ce_get_cost_and_usage(
-    profile_name: str, 
-    region: str, 
-    start: str, 
+    profile_name: str,
+    region: str,
+    start: str,
     end: str,
-    granularity: Optional[str] = 'MONTHLY',
-    group_by: Optional[List[Dict[str, str]]] = None,
-    metrics: Optional[List[str]] = None,
-    filter_expression: Optional[Dict[str, Any]] = None,
-    next_page_token: Optional[str] = None
+    granularity: str | None = "MONTHLY",
+    group_by: list[dict[str, str]] | None = None,
+    metrics: list[str] | None = None,
+    filter_expression: dict[str, Any] | None = None,
+    next_page_token: str | None = None,
 ) -> dict:
     session = boto3.Session(profile_name=profile_name)
-    ce = session.client('ce', region_name=region)
-    
+    ce = session.client("ce", region_name=region)
+
     params = {
-        'TimePeriod': {'Start': start, 'End': end},
-        'Granularity': granularity,
-        'Metrics': metrics or ['BlendedCost']
+        "TimePeriod": {"Start": start, "End": end},
+        "Granularity": granularity,
+        "Metrics": metrics or ["BlendedCost"],
     }
-    
+
     if group_by:
-        params['GroupBy'] = group_by
+        params["GroupBy"] = group_by
     if filter_expression:
-        params['Filter'] = filter_expression
+        params["Filter"] = filter_expression
     if next_page_token:
-        params['NextPageToken'] = next_page_token
-    
+        params["NextPageToken"] = next_page_token
+
     response = ce.get_cost_and_usage(**params)
     return response
 
@@ -150,18 +152,18 @@ async def ce_get_cost_and_usage(
       * 'DAILY': Day-by-day resource cost breakdown (max 14 days)
       * 'MONTHLY': Month-by-month resource cost breakdown (max 14 days)
       * **Note:** HOURLY not supported for resource-level data
-    
+
     - group_by (List[Dict[str, str]]): Grouping dimensions for resource analysis
       **Resource Grouping:**
       [{'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}] - Group by individual resources
-      
+
       **Service + Resource:**
       [{'Type': 'DIMENSION', 'Key': 'SERVICE'}, {'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-      
+
       **Tag-based Resource Analysis:**
       [{'Type': 'TAG', 'Key': 'Name'}, {'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
       [{'Type': 'TAG', 'Key': 'Environment'}, {'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-    
+
     - metrics (List[str]): Cost metrics to retrieve. Default: ['BlendedCost']
       * 'BlendedCost': Cost after applying Reserved Instance and Savings Plans discounts
       * 'UnblendedCost': On-demand cost without discounts
@@ -169,41 +171,41 @@ async def ce_get_cost_and_usage(
       * 'NetUnblendedCost': UnblendedCost minus credits and refunds
       * 'UsageQuantity': Resource usage amount (hours, GB, requests, etc.)
       * 'NormalizedUsageAmount': Usage normalized to equivalent units
-    
+
     - filter_expression (Dict[str, Any]): Advanced filtering for targeted resource analysis
       **Service Filters:**
       {'Dimensions': {'Key': 'SERVICE', 'Values': ['Amazon Elastic Compute Cloud - Compute']}}
-      
+
       **Resource Type Filters:**
       {'Dimensions': {'Key': 'INSTANCE_TYPE', 'Values': ['t3.micro', 'm5.large']}}
-      
+
       **Tag-based Resource Filters:**
       {'Tags': {'Key': 'Environment', 'Values': ['production']}}
       {'Tags': {'Key': 'Owner', 'Values': ['team-a', 'team-b']}}
-      
+
       **Complex Resource Filters:**
       {'And': [{'Dimensions': {'Key': 'SERVICE', 'Values': ['EC2']}}, {'Tags': {'Key': 'Environment', 'Values': ['production']}}]}
-    
+
     - next_page_token (str): Pagination token from previous response
       * Essential for resource-level data due to large result sets
 
     **Common Use Cases:**
-    1. **EC2 instance cost analysis:** 
+    1. **EC2 instance cost analysis:**
        filter_expression={'Dimensions': {'Key': 'SERVICE', 'Values': ['Amazon Elastic Compute Cloud - Compute']}}
        group_by=[{'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-    
+
     2. **RDS database cost breakdown:**
        filter_expression={'Dimensions': {'Key': 'SERVICE', 'Values': ['Amazon Relational Database Service']}}
        group_by=[{'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-    
+
     3. **S3 bucket cost analysis:**
        filter_expression={'Dimensions': {'Key': 'SERVICE', 'Values': ['Amazon Simple Storage Service']}}
        group_by=[{'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-    
+
     4. **Team-based resource costs:**
        filter_expression={'Tags': {'Key': 'Team', 'Values': ['backend', 'frontend']}}
        group_by=[{'Type': 'TAG', 'Key': 'Team'}, {'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
-    
+
     5. **Environment resource breakdown:**
        filter_expression={'Tags': {'Key': 'Environment', 'Values': ['production']}}
        group_by=[{'Type': 'DIMENSION', 'Key': 'RESOURCE_ID'}]
@@ -223,34 +225,34 @@ async def ce_get_cost_and_usage(
     - Focus on high-cost services for optimization
     - Combine with tagging strategies for better insights
     - Use for detailed cost allocation and chargeback reporting
-    """
+    """,
 )
 async def ce_get_cost_and_usage_with_resources(
-    profile_name: str, 
-    region: str, 
-    start: str, 
+    profile_name: str,
+    region: str,
+    start: str,
     end: str,
-    granularity: Optional[str] = 'MONTHLY',
-    group_by: Optional[List[Dict[str, str]]] = None,
-    metrics: Optional[List[str]] = None,
-    filter_expression: Optional[Dict[str, Any]] = None,
-    next_page_token: Optional[str] = None
+    granularity: str | None = "MONTHLY",
+    group_by: list[dict[str, str]] | None = None,
+    metrics: list[str] | None = None,
+    filter_expression: dict[str, Any] | None = None,
+    next_page_token: str | None = None,
 ) -> dict:
     session = boto3.Session(profile_name=profile_name)
-    ce = session.client('ce', region_name=region)
-    
+    ce = session.client("ce", region_name=region)
+
     params = {
-        'TimePeriod': {'Start': start, 'End': end},
-        'Granularity': granularity,
-        'Metrics': metrics or ['BlendedCost']
+        "TimePeriod": {"Start": start, "End": end},
+        "Granularity": granularity,
+        "Metrics": metrics or ["BlendedCost"],
     }
-    
+
     if group_by:
-        params['GroupBy'] = group_by
+        params["GroupBy"] = group_by
     if filter_expression:
-        params['Filter'] = filter_expression
+        params["Filter"] = filter_expression
     if next_page_token:
-        params['NextPageToken'] = next_page_token
-    
+        params["NextPageToken"] = next_page_token
+
     response = ce.get_cost_and_usage_with_resources(**params)
     return response

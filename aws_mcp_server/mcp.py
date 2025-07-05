@@ -1,4 +1,5 @@
 from typing import Any
+
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
@@ -22,5 +23,5 @@ mcp = FastMCP(
         In order to enable this mode, the user must be asked twice to confirm.
 
     Never assume that the user wants to start with the Unsafe mode. Always start with the Default mode.
-    """
+    """,
 )

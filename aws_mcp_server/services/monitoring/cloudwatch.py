@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 import boto3
-from typing import Optional, List, Dict, Any
+
 from ...mcp import mcp
 
 
@@ -25,18 +27,18 @@ from ...mcp import mcp
     - statistics (List[str]): Standard statistics to calculate. Default: ['Average']
       Options: 'Average', 'Sum', 'SampleCount', 'Maximum', 'Minimum'
       Example: ['Average', 'Maximum'] for CPU utilization trends
-    
+
     - extended_statistics (List[str]): Percentile statistics for detailed analysis
       Format: 'p{percentile}' (e.g., 'p99', 'p95', 'p90', 'p50')
       Example: ['p99', 'p95'] for latency analysis
-    
+
     - dimensions (List[Dict[str, str]]): Filter metrics by specific resource attributes
       Common dimension examples:
       * EC2: [{'Name': 'InstanceId', 'Value': 'i-1234567890abcdef0'}]
       * RDS: [{'Name': 'DBInstanceIdentifier', 'Value': 'mydb-instance'}]
       * Lambda: [{'Name': 'FunctionName', 'Value': 'my-function'}]
       * ELB: [{'Name': 'LoadBalancerName', 'Value': 'my-load-balancer'}]
-    
+
     - unit (str): Expected unit of measurement for validation
       Common units: 'Seconds', 'Percent', 'Count', 'Bytes', 'Bits/Second'
 
@@ -52,45 +54,45 @@ from ...mcp import mcp
     - For long-term analysis: Use 3600-second periods, up to 455 days of data
 
     Returns detailed metric data points with timestamps, values, and units for analysis and alerting.
-    """
+    """,
 )
 async def cloudwatch_get_metric_statistics(
-    profile_name: str, 
-    region: str, 
-    metric_name: str, 
-    namespace: str, 
-    start_time: str, 
-    end_time: str, 
+    profile_name: str,
+    region: str,
+    metric_name: str,
+    namespace: str,
+    start_time: str,
+    end_time: str,
     period: int,
-    statistics: Optional[List[str]] = None,
-    extended_statistics: Optional[List[str]] = None,
-    dimensions: Optional[List[Dict[str, str]]] = None,
-    unit: Optional[str] = None
+    statistics: list[str] | None = None,
+    extended_statistics: list[str] | None = None,
+    dimensions: list[dict[str, str]] | None = None,
+    unit: str | None = None,
 ) -> dict:
     session = boto3.Session(profile_name=profile_name)
-    cloudwatch = session.client('cloudwatch', region_name=region)
-    
+    cloudwatch = session.client("cloudwatch", region_name=region)
+
     params = {
-        'Namespace': namespace,
-        'MetricName': metric_name,
-        'StartTime': start_time,
-        'EndTime': end_time,
-        'Period': period
+        "Namespace": namespace,
+        "MetricName": metric_name,
+        "StartTime": start_time,
+        "EndTime": end_time,
+        "Period": period,
     }
-    
+
     if statistics:
-        params['Statistics'] = statistics
+        params["Statistics"] = statistics
     elif not extended_statistics:
-        params['Statistics'] = ['Average']
-    
+        params["Statistics"] = ["Average"]
+
     if extended_statistics:
-        params['ExtendedStatistics'] = extended_statistics
-    
+        params["ExtendedStatistics"] = extended_statistics
+
     if dimensions:
-        params['Dimensions'] = dimensions
-    
+        params["Dimensions"] = dimensions
+
     if unit:
-        params['Unit'] = unit
-    
+        params["Unit"] = unit
+
     response = cloudwatch.get_metric_statistics(**params)
     return response
