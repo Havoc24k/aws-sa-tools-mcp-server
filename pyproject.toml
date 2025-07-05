@@ -1,10 +1,25 @@
 [project]
 name = "aws-mcp-server"
-version = "0.2.0"
+version = "0.2.3"
 description = "AWS MCP Server"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["boto3>=1.37.18", "mcp[cli]>=1.5.0"]
+
+[dependency-groups]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "moto>=5.0.0",
+    "pytest-mock>=3.12.0",
+    "coverage>=7.6.0"
+]
+dev = [
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+    "black>=24.0.0"
+]
 
 [project.scripts]
 "aws-mcp-server" = "aws_mcp_server.server:main"

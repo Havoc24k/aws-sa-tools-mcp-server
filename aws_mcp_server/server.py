@@ -1,5 +1,5 @@
 import argparse
-from aws_mcp_server.mcp import mcp
+from .mcp import mcp
 
 
 def main():
