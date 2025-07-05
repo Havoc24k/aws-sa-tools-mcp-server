@@ -1,6 +1,6 @@
 [project]
 name = "aws-mcp-server"
-version = "0.2.0"
+version = "0.2.3"
 description = "AWS MCP Server"
 readme = "README.md"
 requires-python = ">=3.12"

@@ -13,7 +13,6 @@ from aws_mcp_server.mcp import mcp
     """
 )
 async def ec2_describe_instances(profile_name: str, region: str) -> dict:
-
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client('ec2', region_name=region)

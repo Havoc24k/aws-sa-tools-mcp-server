@@ -27,14 +27,9 @@ These are the main features of the AWS MCP server that you can use to interact w
 - **CloudWatch**
   - Retrieve metric statistics
 
-### Auxiliary Tools
+- **IAM Security**
+  - Security compliance checks via Logicom prompts
 
-- **Local File System**
-  - List local folders
-  - Read code files
-
-- **Terraform**
-  - Read remote state files
 
 ## Prerequisites
 

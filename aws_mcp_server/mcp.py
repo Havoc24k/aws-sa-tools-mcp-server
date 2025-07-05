@@ -6,8 +6,8 @@ mcp = FastMCP(
     name="aws-mcp-server",
     instructions="""
     This is a FastMCP server that provides a set of tools to interact with AWS services.
-    It includes tools to list S3 buckets, describe EC2 instances, and get cost and usage reports.
-    It also includes tools to read local folders and files, and to list local projects.
+    It includes tools to list S3 buckets, describe EC2 instances, get cost and usage reports,
+    retrieve CloudWatch metrics, manage RDS instances, and perform IAM security checks.
     The server is designed to be used with the MCP protocol and can be run in a local environment.
 
     The server works under two modes, each mode has its own set of permissions and capabilities and defines the actions that can be performed on AWS resources.
