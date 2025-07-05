@@ -1,6 +1,6 @@
 import boto3
 from typing import Any
-from aws_mcp_server.mcp import mcp
+from ...mcp import mcp
 
 
 @mcp.resource("resource://aws_config")
