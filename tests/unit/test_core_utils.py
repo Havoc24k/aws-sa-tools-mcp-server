@@ -1,13 +1,15 @@
 """Unit tests for core utilities."""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from aws_mcp_server.core.utils import (
+    chunk_list,
+    format_aws_timestamp,
+    merge_filters,
     sanitize_dict,
     validate_aws_identifier,
-    format_aws_timestamp,
-    chunk_list,
-    merge_filters,
 )
 
 

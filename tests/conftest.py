@@ -1,11 +1,13 @@
 """Global pytest configuration and fixtures."""
 
 import os
-import pytest
-import boto3
-from moto import mock_aws
-from typing import Dict, Any, Generator
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import Mock, patch
+
+import boto3
+import pytest
+from moto import mock_aws
 
 # Disable AWS credential checks for testing
 os.environ["AWS_ACCESS_KEY_ID"] = "testing"
@@ -102,7 +104,7 @@ def mcp_server():
 
 
 # Utility functions for tests
-def create_mock_aws_response(service: str, operation: str, **kwargs) -> Dict[str, Any]:
+def create_mock_aws_response(service: str, operation: str, **kwargs) -> dict[str, Any]:
     """Create a mock AWS response."""
     base_response = {
         "ResponseMetadata": {

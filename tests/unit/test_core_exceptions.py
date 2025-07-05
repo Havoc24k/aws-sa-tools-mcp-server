@@ -1,11 +1,12 @@
 """Unit tests for core exceptions."""
 
 import pytest
+
 from aws_mcp_server.core.exceptions import (
     AWSMCPError,
+    AWSServiceError,
     InvalidProfileError,
     InvalidRegionError,
-    AWSServiceError,
     ParameterValidationError,
 )
 

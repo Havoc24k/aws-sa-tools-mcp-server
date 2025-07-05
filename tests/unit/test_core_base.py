@@ -1,7 +1,9 @@
 """Unit tests for core base classes."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from aws_mcp_server.core.base import AWSService, PaginatedAWSService
 
 

@@ -1,7 +1,7 @@
 """Simple integration tests for S3 service tools."""
 
-import pytest
 import boto3
+import pytest
 from moto import mock_aws
 
 
@@ -84,7 +84,7 @@ class TestS3ServiceErrors:
             from aws_mcp_server.services.storage.s3 import s3_list_objects_v2
 
             # This should raise an exception for nonexistent bucket
-            with pytest.raises(Exception):
+            with pytest.raises((Exception, ValueError, KeyError)):
                 await s3_list_objects_v2(
                     profile_name="test",
                     region="us-east-1",

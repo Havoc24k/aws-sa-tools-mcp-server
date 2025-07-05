@@ -1,11 +1,13 @@
 """Unit tests for core authentication utilities."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from aws_mcp_server.core.auth import (
-    validate_aws_profile,
-    list_available_profiles,
     get_default_region,
+    list_available_profiles,
+    validate_aws_profile,
     validate_region,
 )
 

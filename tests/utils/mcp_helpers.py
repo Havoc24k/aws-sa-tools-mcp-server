@@ -1,7 +1,8 @@
 """MCP testing helpers and utilities."""
 
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any, Optional
+
 from fastmcp import FastMCP
 
 
@@ -10,7 +11,7 @@ class MCPTestHelper:
 
     @staticmethod
     def validate_tool_response(
-        response: Dict[str, Any], expected_content_type: str = "text"
+        response: dict[str, Any], expected_content_type: str = "text"
     ) -> bool:
         """Validate MCP tool response format.
 
@@ -41,7 +42,7 @@ class MCPTestHelper:
             return False
 
     @staticmethod
-    def create_mock_tool_args(tool_name: str, **kwargs) -> Dict[str, Any]:
+    def create_mock_tool_args(tool_name: str, **kwargs) -> dict[str, Any]:
         """Create mock arguments for MCP tool calls.
 
         Args:
@@ -56,7 +57,7 @@ class MCPTestHelper:
         return base_args
 
     @staticmethod
-    def extract_tool_result_data(response: Dict[str, Any]) -> Any:
+    def extract_tool_result_data(response: dict[str, Any]) -> Any:
         """Extract data from MCP tool response.
 
         Args:
@@ -112,8 +113,8 @@ class MCPTestHelper:
 
     @staticmethod
     async def test_tool_with_args(
-        client, tool_name: str, args: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        client, tool_name: str, args: dict[str, Any]
+    ) -> dict[str, Any]:
         """Test MCP tool with given arguments.
 
         Args:
@@ -131,7 +132,7 @@ class MCPTestHelper:
             return {"success": False, "response": None, "error": str(e)}
 
     @staticmethod
-    def create_test_scenarios() -> Dict[str, Dict[str, Any]]:
+    def create_test_scenarios() -> dict[str, dict[str, Any]]:
         """Create common test scenarios for AWS tools.
 
         Returns:
@@ -181,7 +182,7 @@ class MCPServerTestSuite:
         self.server = server
         self.helper = MCPTestHelper()
 
-    async def test_all_tools(self, client) -> Dict[str, Any]:
+    async def test_all_tools(self, client) -> dict[str, Any]:
         """Test all available tools.
 
         Args:
@@ -221,7 +222,7 @@ class MCPServerTestSuite:
 
         return results
 
-    async def test_resources(self, client) -> Dict[str, Any]:
+    async def test_resources(self, client) -> dict[str, Any]:
         """Test all available resources.
 
         Args:

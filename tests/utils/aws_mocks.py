@@ -1,9 +1,10 @@
 """AWS service mocking utilities for tests."""
 
+from datetime import UTC, datetime, timezone
+from typing import Any
+
 import boto3
 from moto import mock_aws
-from typing import Dict, Any, List
-from datetime import datetime, timezone
 
 
 class AWSMockManager:
@@ -134,7 +135,7 @@ class AWSMockManager:
                     ],
                     "Value": 80.0,
                     "Unit": "Percent",
-                    "Timestamp": datetime.now(timezone.utc),
+                    "Timestamp": datetime.now(UTC),
                 }
             ],
         )

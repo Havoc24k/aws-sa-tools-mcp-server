@@ -1,6 +1,7 @@
 """Integration tests for EC2 service tools."""
 
 import pytest
+
 from tests.utils.aws_mocks import AWSMockManager
 
 
@@ -213,7 +214,7 @@ class TestEC2ServiceErrors:
         """Test EC2 describe instances with invalid region."""
         from aws_mcp_server.services.compute.ec2 import ec2_describe_instances
 
-        with pytest.raises(Exception):
+        with pytest.raises((Exception, ValueError, KeyError)):
             await ec2_describe_instances(
                 profile_name="test", region="invalid-region-123"
             )

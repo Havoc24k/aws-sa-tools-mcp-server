@@ -1,9 +1,10 @@
 """Working integration tests for S3 service tools."""
 
-import pytest
-import boto3
-from moto import mock_aws
 from unittest.mock import patch
+
+import boto3
+import pytest
+from moto import mock_aws
 
 
 class TestS3ServiceWorking:
