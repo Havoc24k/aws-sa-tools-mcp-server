@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import boto3
 
@@ -117,13 +117,13 @@ async def s3_list_objects_v2(
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client("s3", region_name=region)
 
-    params = {"Bucket": bucket_name}
+    params: dict[str, Any] = {"Bucket": bucket_name}
     if prefix:
         params["Prefix"] = prefix
     if delimiter:
         params["Delimiter"] = delimiter
     if max_keys:
-        params["MaxKeys"] = str(max_keys)
+        params["MaxKeys"] = max_keys
     if continuation_token:
         params["ContinuationToken"] = continuation_token
     if start_after:
