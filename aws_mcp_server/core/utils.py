@@ -5,14 +5,14 @@ from datetime import datetime
 from typing import Any
 
 
-def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
+def sanitize_dict(data: Any) -> Any:
     """Remove None values from a dictionary recursively.
 
     Args:
-        data: Dictionary to sanitize
+        data: Dictionary to sanitize or any other value
 
     Returns:
-        Dictionary with None values removed
+        Dictionary with None values removed or original value if not dict
     """
     if not isinstance(data, dict):
         return data
@@ -101,7 +101,7 @@ def chunk_list(items: list[Any], chunk_size: int) -> list[list[Any]]:
     Returns:
         List of chunked lists
     """
-    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
+    return [items[i: i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
 def merge_filters(

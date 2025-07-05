@@ -105,11 +105,11 @@ async def ce_get_cost_and_usage(
     start: str,
     end: str,
     granularity: str | None = "MONTHLY",
-    group_by: list[dict[str, str]] | None = None,
+    group_by: list[str] | dict[str, str] | str | None = None,
     metrics: list[str] | None = None,
     filter_expression: dict[str, Any] | None = None,
     next_page_token: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     ce = session.client("ce", region_name=region)
 
@@ -233,11 +233,11 @@ async def ce_get_cost_and_usage_with_resources(
     start: str,
     end: str,
     granularity: str | None = "MONTHLY",
-    group_by: list[dict[str, str]] | None = None,
+    group_by: list[str] | dict[str, str] | str | None = None,
     metrics: list[str] | None = None,
     filter_expression: dict[str, Any] | None = None,
     next_page_token: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     ce = session.client("ce", region_name=region)
 

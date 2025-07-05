@@ -3,7 +3,7 @@ import argparse
 from .mcp import mcp
 
 
-def main():
+def main() -> None:
     """Run the MCP server with CLI argument support."""
     parser = argparse.ArgumentParser(
         description="A Model Context Protocol (MCP) server"

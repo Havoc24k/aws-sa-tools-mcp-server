@@ -30,7 +30,6 @@ These are the main features of the AWS MCP server that you can use to interact w
 - **IAM Security**
   - Security compliance checks via Logicom prompts
 
-
 ## Prerequisites
 
 - Python 3.12 or higher

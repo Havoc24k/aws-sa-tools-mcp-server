@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timezone
 from typing import Any
+from unittest.mock import patch
 
 import boto3
 from moto import mock_aws
@@ -13,6 +14,7 @@ class AWSMockManager:
     def __init__(self):
         self.mocks = {}
         self.clients = {}
+        self.session_patch = None
 
     def setup_ec2_mock(self, region: str = "us-east-1"):
         """Set up EC2 mock with sample data."""
@@ -23,6 +25,9 @@ class AWSMockManager:
 
         client = boto3.client("ec2", region_name=region)
         self.clients["ec2"] = client
+
+        # Setup session patching
+        self._setup_session_patch(client, region)
 
         # Create sample VPC
         vpc_response = client.create_vpc(CidrBlock="10.0.0.0/16")
@@ -69,6 +74,9 @@ class AWSMockManager:
         client = boto3.client("s3", region_name=region)
         self.clients["s3"] = client
 
+        # Setup session patching
+        self._setup_session_patch(client, region)
+
         # Create sample buckets
         buckets = ["test-bucket-1", "test-bucket-2", "production-bucket"]
         for bucket in buckets:
@@ -83,6 +91,17 @@ class AWSMockManager:
                 )
 
         return {"buckets": buckets}
+
+    def _setup_session_patch(self, client, region: str):
+        """Set up boto3.Session patching to use mocked clients."""
+        if not self.session_patch:
+            def mock_session(*args, **kwargs):
+                session = boto3.Session()
+                session.client = lambda service, **client_kwargs: client
+                return session
+
+            self.session_patch = patch("boto3.Session", side_effect=mock_session)
+            self.session_patch.start()
 
     def setup_rds_mock(self, region: str = "us-east-1"):
         """Set up RDS mock with sample data."""
@@ -168,6 +187,9 @@ class AWSMockManager:
         """Clean up all mocks."""
         for mock in self.mocks.values():
             mock.stop()
+        if self.session_patch:
+            self.session_patch.stop()
+            self.session_patch = None
         self.mocks.clear()
         self.clients.clear()
 

@@ -6,7 +6,7 @@ from ...mcp import mcp
 
 
 @mcp.resource("resource://aws_config")
-def get_aws_config() -> dict:
+def get_aws_config() -> Any:
     """
     Get the AWS configuration from the user's home directory.
 

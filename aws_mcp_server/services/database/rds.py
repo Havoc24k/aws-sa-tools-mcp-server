@@ -96,14 +96,14 @@ async def rds_describe_db_instances(
     profile_name: str,
     region: str,
     db_instance_identifier: str | None = None,
-    filters: dict[str, Any] | None = None,
+    filters: dict[str, list[Any]] | None = None,
     max_records: int | None = None,
     marker: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     rds = session.client("rds", region_name=region)
 
-    params = {}
+    params: dict[str, Any] = {}
     if db_instance_identifier:
         params["DBInstanceIdentifier"] = db_instance_identifier
     if filters:

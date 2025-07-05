@@ -68,7 +68,7 @@ async def cloudwatch_get_metric_statistics(
     extended_statistics: list[str] | None = None,
     dimensions: list[dict[str, str]] | None = None,
     unit: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     cloudwatch = session.client("cloudwatch", region_name=region)
 

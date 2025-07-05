@@ -26,7 +26,7 @@ class Settings:
         "pagination_timeout": 300,
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize settings from environment variables."""
         self.port = int(os.getenv("AWS_MCP_PORT", self.DEFAULT_PORT))
         self.transport = os.getenv("AWS_MCP_TRANSPORT", self.DEFAULT_TRANSPORT)

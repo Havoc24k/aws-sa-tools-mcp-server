@@ -33,7 +33,7 @@ from ...mcp import mcp
     to explore bucket contents and get region-specific bucket information.
     """,
 )
-async def s3_list_buckets(profile_name: str, region: str) -> dict:
+async def s3_list_buckets(profile_name: str, region: str) -> Any:
     # Get the AWS credentials
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client("s3", region_name=region)
@@ -113,7 +113,7 @@ async def s3_list_objects_v2(
     continuation_token: str | None = None,
     start_after: str | None = None,
     fetch_owner: bool | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     s3 = session.client("s3", region_name=region)
 
@@ -123,13 +123,13 @@ async def s3_list_objects_v2(
     if delimiter:
         params["Delimiter"] = delimiter
     if max_keys:
-        params["MaxKeys"] = max_keys
+        params["MaxKeys"] = str(max_keys)
     if continuation_token:
         params["ContinuationToken"] = continuation_token
     if start_after:
         params["StartAfter"] = start_after
     if fetch_owner is not None:
-        params["FetchOwner"] = fetch_owner
+        params["FetchOwner"] = str(fetch_owner).lower()
 
     response = s3.list_objects_v2(**params)
     return response

@@ -9,13 +9,14 @@ class TestS3Service:
     """Test S3 service integration."""
 
     @pytest.fixture(autouse=True)
-    async def setup_method(self):
+    def setup_method(self):
         """Set up AWS mocks for each test."""
         self.aws_mock = AWSMockManager()
         self.test_data = self.aws_mock.setup_s3_mock()
         yield
         self.aws_mock.cleanup()
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_buckets(self, mcp_server):
@@ -42,6 +43,7 @@ class TestS3Service:
             for field in required_fields:
                 assert field in bucket
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_basic(self, mcp_server):
@@ -67,6 +69,7 @@ class TestS3Service:
         for field in required_fields:
             assert field in obj
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_with_prefix(self, mcp_server):
@@ -88,6 +91,7 @@ class TestS3Service:
         for obj in result["Contents"]:
             assert obj["Key"].startswith("test-file-1")
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_with_max_keys(self, mcp_server):
@@ -109,6 +113,7 @@ class TestS3Service:
         if len(result["Contents"]) == 2:
             assert result.get("IsTruncated", False) in [True, False]
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_with_delimiter(self, mcp_server):
@@ -144,6 +149,7 @@ class TestS3Service:
             prefix_values = [cp["Prefix"] for cp in result["CommonPrefixes"]]
             assert "folder1/" in prefix_values or "folder2/" in prefix_values
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_empty_bucket(self, mcp_server):
@@ -168,6 +174,7 @@ class TestS3Service:
             # Some implementations might not include Contents key for empty buckets
             assert "Contents" not in result
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_with_start_after(self, mcp_server):
@@ -189,6 +196,7 @@ class TestS3Service:
         for obj in result["Contents"]:
             assert obj["Key"] > "test-file-0.txt"
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_fetch_owner(self, mcp_server):
@@ -217,6 +225,7 @@ class TestS3Service:
 class TestS3ServiceErrors:
     """Test S3 service error handling."""
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_objects_v2_nonexistent_bucket(self, mock_aws_services):
@@ -230,6 +239,7 @@ class TestS3ServiceErrors:
                 bucket_name="nonexistent-bucket-12345",
             )
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_list_buckets_with_invalid_credentials(self):

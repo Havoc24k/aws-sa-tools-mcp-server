@@ -27,11 +27,11 @@ class AWSService(ABC):
         """Return the AWS service name for boto3 client creation."""
         pass
 
-    def _create_client(self):
+    def _create_client(self) -> Any:
         """Create boto3 client for the service."""
         return self.session.client(self.service_name, region_name=self.region)
 
-    def _build_params(self, **kwargs) -> dict[str, Any]:
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """Build parameter dictionary excluding None values.
 
         Args:
@@ -85,7 +85,7 @@ class PaginatedAWSService(AWSService):
         pages = paginator.paginate(**params)
 
         # Combine all pages into a single result
-        combined_result = {}
+        combined_result: dict[str, Any] = {}
         for page in pages:
             if not combined_result:
                 combined_result = page.copy()

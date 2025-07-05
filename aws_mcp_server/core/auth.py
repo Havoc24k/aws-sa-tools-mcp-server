@@ -33,7 +33,7 @@ def list_available_profiles() -> list[str]:
     """
     try:
         session = boto3.Session()
-        return session.available_profiles
+        return list(session.available_profiles)
     except Exception:
         return []
 
@@ -49,7 +49,8 @@ def get_default_region(profile_name: str | None = None) -> str | None:
     """
     try:
         session = boto3.Session(profile_name=profile_name)
-        return session.region_name
+        region = session.region_name
+        return region if region is not None else None
     except Exception:
         return None
 

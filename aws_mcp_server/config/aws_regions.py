@@ -42,7 +42,7 @@ def get_all_regions() -> set[str]:
     Returns:
         Set of all AWS region codes
     """
-    regions = set()
+    regions: set[str] = set()
     for area_regions in AWS_REGIONS.values():
         regions.update(area_regions.keys())
     return regions
@@ -60,7 +60,7 @@ def get_regions_by_area(area: str) -> list[str]:
     return list(AWS_REGIONS.get(area, {}).keys())
 
 
-def get_region_info(region: str) -> dict[str, any]:
+def get_region_info(region: str) -> dict[str, Any]:
     """Get information about a specific region.
 
     Args:

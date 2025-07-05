@@ -72,16 +72,17 @@ async def ec2_describe_instances(
     filters: dict[str, Any] | None = None,
     max_results: int | None = None,
     next_token: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client("ec2", region_name=region)
 
-    params = {}
+    params: dict[str, Any] = {}
     if instance_ids:
         params["InstanceIds"] = instance_ids
     if filters:
         params["Filters"] = [
-            {"Name": k, "Values": v if isinstance(v, list) else [v]}
+            {"Name": k, "Values": [str(value) for value in (
+                v if isinstance(v, list) else [v])]}
             for k, v in filters.items()
         ]
     if max_results:
@@ -157,11 +158,11 @@ async def ec2_describe_security_groups(
     filters: dict[str, Any] | None = None,
     max_results: int | None = None,
     next_token: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client("ec2", region_name=region)
 
-    params = {}
+    params: dict[str, Any] = {}
     if group_ids:
         params["GroupIds"] = group_ids
     if group_names:
@@ -247,11 +248,11 @@ async def ec2_describe_vpcs(
     filters: dict[str, Any] | None = None,
     max_results: int | None = None,
     next_token: str | None = None,
-) -> dict:
+) -> Any:
     session = boto3.Session(profile_name=profile_name)
     ec2 = session.client("ec2", region_name=region)
 
-    params = {}
+    params: dict[str, Any] = {}
     if vpc_ids:
         params["VpcIds"] = vpc_ids
     if filters:

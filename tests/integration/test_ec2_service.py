@@ -1,47 +1,71 @@
 """Integration tests for EC2 service tools."""
 
-import pytest
+from unittest.mock import patch
 
-from tests.utils.aws_mocks import AWSMockManager
+import boto3
+import pytest
+from moto import mock_aws
 
 
 class TestEC2Service:
     """Test EC2 service integration."""
 
-    @pytest.fixture(autouse=True)
-    async def setup_method(self):
-        """Set up AWS mocks for each test."""
-        self.aws_mock = AWSMockManager()
-        self.test_data = self.aws_mock.setup_ec2_mock()
-        yield
-        self.aws_mock.cleanup()
-
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
-    async def test_describe_instances_basic(self, mcp_server):
+    async def test_describe_instances_basic(self):
         """Test basic EC2 describe instances functionality."""
-        from aws_mcp_server.services.compute.ec2 import ec2_describe_instances
+        with mock_aws():
+            # Create test infrastructure
+            client = boto3.client("ec2", region_name="us-east-1")
 
-        result = await ec2_describe_instances(profile_name="test", region="us-east-1")
+            # Create VPC
+            vpc_response = client.create_vpc(CidrBlock="10.0.0.0/16")
+            vpc_id = vpc_response["Vpc"]["VpcId"]
 
-        # Verify response structure
-        assert "Reservations" in result
-        assert isinstance(result["Reservations"], list)
+            # Create security group
+            sg_response = client.create_security_group(
+                GroupName="test-sg", Description="Test security group", VpcId=vpc_id
+            )
+            sg_id = sg_response["GroupId"]
 
-        # Should have created instances in setup
-        assert len(result["Reservations"]) > 0
+            # Create instances
+            client.run_instances(
+                ImageId="ami-12345678",
+                MinCount=2,
+                MaxCount=2,
+                InstanceType="t2.micro",
+                SecurityGroupIds=[sg_id],
+            )
 
-        # Check instance structure
-        if result["Reservations"]:
-            reservation = result["Reservations"][0]
-            assert "Instances" in reservation
-            instance = reservation["Instances"][0]
+            # Test the function by patching the session creation
+            with patch("boto3.Session") as mock_session:
+                mock_session.return_value = boto3.Session()
+                mock_session.return_value.client = lambda *args, **kwargs: client
 
-            # Verify instance has required fields
-            required_fields = ["InstanceId", "State", "InstanceType"]
-            for field in required_fields:
-                assert field in instance
+                from aws_mcp_server.services.compute.ec2 import ec2_describe_instances
 
+                result = await ec2_describe_instances(profile_name="test", region="us-east-1")
+
+                # Verify response structure
+                assert "Reservations" in result
+                assert isinstance(result["Reservations"], list)
+
+                # Should have created instances in setup
+                assert len(result["Reservations"]) > 0
+
+                # Check instance structure
+                if result["Reservations"]:
+                    reservation = result["Reservations"][0]
+                    assert "Instances" in reservation
+                    instance = reservation["Instances"][0]
+
+                    # Verify instance has required fields
+                    required_fields = ["InstanceId", "State", "InstanceType"]
+                    for field in required_fields:
+                        assert field in instance
+
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_with_filters(self, mcp_server):
@@ -62,6 +86,7 @@ class TestEC2Service:
             for instance in reservation["Instances"]:
                 assert instance["State"]["Name"] == "running"
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_with_specific_ids(self, mcp_server):
@@ -88,6 +113,7 @@ class TestEC2Service:
         assert len(found_instance_ids) == 1
         assert found_instance_ids[0] in instance_ids
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_security_groups(self, mcp_server):
@@ -110,6 +136,7 @@ class TestEC2Service:
         for field in required_fields:
             assert field in sg
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_security_groups_with_filters(self, mcp_server):
@@ -128,6 +155,7 @@ class TestEC2Service:
         for sg in result["SecurityGroups"]:
             assert sg["VpcId"] == vpc_id
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_vpcs(self, mcp_server):
@@ -148,6 +176,7 @@ class TestEC2Service:
         for field in required_fields:
             assert field in vpc
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_vpcs_with_specific_id(self, mcp_server):
@@ -164,6 +193,7 @@ class TestEC2Service:
         assert len(result["Vpcs"]) == 1
         assert result["Vpcs"][0]["VpcId"] == vpc_id
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_pagination(self, mcp_server):
@@ -179,6 +209,7 @@ class TestEC2Service:
         # With max_results=1, we should get at most 1 reservation
         assert len(result["Reservations"]) <= 1
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_with_tag_filter(self, mcp_server):
@@ -208,6 +239,7 @@ class TestEC2Service:
 class TestEC2ServiceErrors:
     """Test EC2 service error handling."""
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_invalid_region(self):
@@ -219,6 +251,7 @@ class TestEC2ServiceErrors:
                 profile_name="test", region="invalid-region-123"
             )
 
+    @pytest.mark.asyncio
     @pytest.mark.integration
     @pytest.mark.aws
     async def test_describe_instances_nonexistent_instance_id(self, mock_aws_services):
