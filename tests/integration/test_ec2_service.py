@@ -45,7 +45,9 @@ class TestEC2Service:
 
                 from aws_mcp_server.services.compute.ec2 import ec2_describe_instances
 
-                result = await ec2_describe_instances(profile_name="test", region="us-east-1")
+                result = await ec2_describe_instances(
+                    profile_name="test", region="us-east-1"
+                )
 
                 # Verify response structure
                 assert "Reservations" in result

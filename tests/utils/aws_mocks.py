@@ -95,6 +95,7 @@ class AWSMockManager:
     def _setup_session_patch(self, client, region: str):
         """Set up boto3.Session patching to use mocked clients."""
         if not self.session_patch:
+
             def mock_session(*args, **kwargs):
                 session = boto3.Session()
                 session.client = lambda service, **client_kwargs: client

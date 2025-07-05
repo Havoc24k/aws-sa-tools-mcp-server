@@ -81,8 +81,10 @@ async def ec2_describe_instances(
         params["InstanceIds"] = instance_ids
     if filters:
         params["Filters"] = [
-            {"Name": k, "Values": [str(value) for value in (
-                v if isinstance(v, list) else [v])]}
+            {
+                "Name": k,
+                "Values": [str(value) for value in (v if isinstance(v, list) else [v])],
+            }
             for k, v in filters.items()
         ]
     if max_results:
