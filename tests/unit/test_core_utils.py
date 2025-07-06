@@ -1,13 +1,18 @@
 """Unit tests for core utilities."""
 
 from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pytest
 
 from aws_mcp_server.core.utils import (
+    build_params,
     chunk_list,
+    create_aws_client,
     format_aws_timestamp,
+    format_filters,
     merge_filters,
+    paginate_results,
     sanitize_dict,
     validate_aws_identifier,
 )
@@ -234,3 +239,151 @@ class TestMergeFilters:
 
         result = merge_filters({}, {})
         assert result == {}
+
+
+class TestCreateAwsClient:
+    """Test create_aws_client function."""
+
+    @patch("boto3.Session")
+    def test_create_aws_client(self, mock_session):
+        """Test create_aws_client function."""
+        mock_client = Mock()
+        mock_session_instance = Mock()
+        mock_session_instance.client.return_value = mock_client
+        mock_session.return_value = mock_session_instance
+
+        client = create_aws_client("test-profile", "us-east-1", "ec2")
+
+        assert client == mock_client
+        mock_session.assert_called_once_with(profile_name="test-profile")
+        mock_session_instance.client.assert_called_once_with(
+            "ec2", region_name="us-east-1"
+        )
+
+
+class TestBuildParams:
+    """Test build_params function."""
+
+    def test_build_params(self):
+        """Test build_params function."""
+        params = build_params(key1="value1", key2=None, key3="value3", key4=None)
+
+        expected = {"key1": "value1", "key3": "value3"}
+        assert params == expected
+
+    def test_build_params_empty(self):
+        """Test build_params with empty input."""
+        params = build_params()
+        assert params == {}
+
+    def test_build_params_all_none(self):
+        """Test build_params with all None values."""
+        params = build_params(key1=None, key2=None)
+        assert params == {}
+
+
+class TestFormatFilters:
+    """Test format_filters function."""
+
+    def test_format_filters_none(self):
+        """Test format_filters with None input."""
+        result = format_filters(None)
+        assert result is None
+
+    def test_format_filters_empty(self):
+        """Test format_filters with empty dict."""
+        result = format_filters({})
+        assert result is None
+
+    def test_format_filters_dict(self):
+        """Test format_filters with dictionary input."""
+        filters = {
+            "instance-state-name": ["running", "stopped"],
+            "instance-type": "t2.micro",
+            "tag:Environment": "production",
+        }
+
+        result = format_filters(filters)
+        expected = [
+            {"Name": "instance-state-name", "Values": ["running", "stopped"]},
+            {"Name": "instance-type", "Values": ["t2.micro"]},
+            {"Name": "tag:Environment", "Values": ["production"]},
+        ]
+
+        assert result == expected
+
+    def test_format_filters_single_values(self):
+        """Test format_filters with single values converted to lists."""
+        filters = {"single-value": "test"}
+        result = format_filters(filters)
+        expected = [{"Name": "single-value", "Values": ["test"]}]
+
+        assert result == expected
+
+
+class TestPaginateResults:
+    """Test paginate_results function."""
+
+    def test_paginate_results(self):
+        """Test paginate_results function."""
+        # Mock paginator and pages
+        mock_paginator = Mock()
+        mock_client = Mock()
+        mock_client.get_paginator.return_value = mock_paginator
+
+        # Mock pages with different data structures
+        page1 = {
+            "Items": [{"id": 1}, {"id": 2}],
+            "NextToken": "token1",
+            "Metadata": {"RequestId": "req1"},
+        }
+        page2 = {"Items": [{"id": 3}, {"id": 4}], "Metadata": {"RequestId": "req2"}}
+        mock_paginator.paginate.return_value = [page1, page2]
+
+        params = {"MaxResults": 10}
+        result = paginate_results(mock_client, "describe_items", params)
+
+        # Verify paginator was called correctly
+        mock_client.get_paginator.assert_called_once_with("describe_items")
+        mock_paginator.paginate.assert_called_once_with(**params)
+
+        # Verify results were combined correctly
+        expected = {
+            "Items": [{"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}],
+            "NextToken": "token1",  # From first page
+            "Metadata": {"RequestId": "req1"},  # From first page
+        }
+        assert result == expected
+
+    def test_paginate_results_single_page(self):
+        """Test paginate_results with single page."""
+        mock_paginator = Mock()
+        mock_client = Mock()
+        mock_client.get_paginator.return_value = mock_paginator
+
+        page = {"Items": [{"id": 1}], "Metadata": {"RequestId": "req1"}}
+        mock_paginator.paginate.return_value = [page]
+
+        result = paginate_results(mock_client, "describe_items", {})
+
+        # Should return the single page as-is
+        assert result == page
+
+    def test_paginate_results_non_list_merge(self):
+        """Test paginate_results with non-list values."""
+        mock_paginator = Mock()
+        mock_client = Mock()
+        mock_client.get_paginator.return_value = mock_paginator
+
+        page1 = {"Count": 5, "Items": [{"id": 1}]}
+        page2 = {
+            "Count": 3,  # This should not be merged
+            "Items": [{"id": 2}],
+        }
+        mock_paginator.paginate.return_value = [page1, page2]
+
+        result = paginate_results(mock_client, "describe_items", {})
+
+        # Count should come from first page, Items should be merged
+        expected = {"Count": 5, "Items": [{"id": 1}, {"id": 2}]}
+        assert result == expected

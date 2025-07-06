@@ -6,19 +6,38 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
-.venv
-
-# Testing and coverage
+# Coverage reports
+coverage.xml
 .coverage
 .coverage.*
 htmlcov/
+
+# Virtual environments
+.venv
+
+# Testing
 .pytest_cache/
-coverage.xml
+.mypy_cache/
 
 # Development tools
 .claude/
 settings.local.json
+CLAUDE.md
+
+# Vector store and embeddings
+chroma_db/
+*.db
+*.sqlite3
+vector_store_data/
+embeddings_cache/
+vector_store_index.json
+
+# Data source directory (may contain sensitive documents)
+datasource/
+
+# Log files
+*.log
+logs/
 
 # IDE and editor files
 .vscode/

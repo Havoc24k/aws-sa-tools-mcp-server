@@ -4,6 +4,8 @@ import re
 from datetime import datetime
 from typing import Any
 
+import boto3
+
 
 def sanitize_dict(data: Any) -> Any:
     """Remove None values from a dictionary recursively.
@@ -128,3 +130,85 @@ def merge_filters(
     merged = base_filters.copy()
     merged.update(additional_filters)
     return merged
+
+
+def create_aws_client(profile_name: str, region: str, service_name: str) -> Any:
+    """Create boto3 client for AWS service.
+
+    Args:
+        profile_name: AWS profile name from ~/.aws/credentials
+        region: AWS region (e.g., 'us-east-1', 'eu-west-1')
+        service_name: AWS service name (e.g., 'ec2', 's3', 'rds')
+
+    Returns:
+        Boto3 client instance
+    """
+    session = boto3.Session(profile_name=profile_name)
+    return session.client(service_name, region_name=region)
+
+
+def build_params(**kwargs: Any) -> dict[str, Any]:
+    """Build parameter dictionary excluding None values.
+
+    Args:
+        **kwargs: Parameters to include in the dict
+
+    Returns:
+        Dictionary with non-None values
+    """
+    return {k: v for k, v in kwargs.items() if v is not None}
+
+
+def format_filters(filters: dict[str, Any] | None) -> list | None:
+    """Format filters dictionary to AWS API format.
+
+    Args:
+        filters: Dictionary of filter keys and values
+
+    Returns:
+        List of filter dictionaries in AWS format
+    """
+    if not filters:
+        return None
+
+    return [
+        {"Name": k, "Values": v if isinstance(v, list) else [v]}
+        for k, v in filters.items()
+    ]
+
+
+def paginate_results(
+    client: Any,
+    operation_name: str,
+    params: dict[str, Any],
+) -> dict[str, Any]:
+    """Handle pagination for AWS API calls.
+
+    Args:
+        client: Boto3 client instance
+        operation_name: Name of the boto3 operation to call
+        params: Parameters for the API call
+
+    Returns:
+        Combined results from all pages
+    """
+    paginator = client.get_paginator(operation_name)
+    pages = paginator.paginate(**params)
+
+    # Combine all pages into a single result
+    combined_result: dict[str, Any] = {}
+    for page in pages:
+        if not combined_result:
+            combined_result = page.copy()
+        else:
+            # Merge results - this is service-specific but works for most cases
+            for key, value in page.items():
+                if isinstance(value, list):
+                    if key in combined_result:
+                        combined_result[key].extend(value)
+                    else:
+                        combined_result[key] = value
+                elif key not in combined_result:
+                    combined_result[key] = value
+
+    return combined_result

@@ -1,7 +1,6 @@
 from typing import Any
 
-import boto3
-
+from ...core.utils import build_params, create_aws_client
 from ...mcp import mcp
 
 
@@ -34,9 +33,7 @@ from ...mcp import mcp
     """,
 )
 async def s3_list_buckets(profile_name: str, region: str) -> Any:
-    # Get the AWS credentials
-    session = boto3.Session(profile_name=profile_name)
-    s3 = session.client("s3", region_name=region)
+    s3 = create_aws_client(profile_name, region, "s3")
     response = s3.list_buckets()
     return response
 
@@ -114,22 +111,17 @@ async def s3_list_objects_v2(
     start_after: str | None = None,
     fetch_owner: bool | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    s3 = session.client("s3", region_name=region)
+    s3 = create_aws_client(profile_name, region, "s3")
 
-    params: dict[str, Any] = {"Bucket": bucket_name}
-    if prefix:
-        params["Prefix"] = prefix
-    if delimiter:
-        params["Delimiter"] = delimiter
-    if max_keys:
-        params["MaxKeys"] = max_keys
-    if continuation_token:
-        params["ContinuationToken"] = continuation_token
-    if start_after:
-        params["StartAfter"] = start_after
-    if fetch_owner is not None:
-        params["FetchOwner"] = str(fetch_owner).lower()
+    params = build_params(
+        Bucket=bucket_name,
+        Prefix=prefix,
+        Delimiter=delimiter,
+        MaxKeys=max_keys,
+        ContinuationToken=continuation_token,
+        StartAfter=start_after,
+        FetchOwner=str(fetch_owner).lower() if fetch_owner is not None else None,
+    )
 
     response = s3.list_objects_v2(**params)
     return response

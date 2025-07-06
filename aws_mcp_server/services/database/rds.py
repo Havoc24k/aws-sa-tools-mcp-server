@@ -1,7 +1,6 @@
 from typing import Any
 
-import boto3
-
+from ...core.utils import build_params, create_aws_client, format_filters
 from ...mcp import mcp
 
 
@@ -100,21 +99,14 @@ async def rds_describe_db_instances(
     max_records: int | None = None,
     marker: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    rds = session.client("rds", region_name=region)
+    rds = create_aws_client(profile_name, region, "rds")
 
-    params: dict[str, Any] = {}
-    if db_instance_identifier:
-        params["DBInstanceIdentifier"] = db_instance_identifier
-    if filters:
-        params["Filters"] = [
-            {"Name": k, "Values": v if isinstance(v, list) else [v]}
-            for k, v in filters.items()
-        ]
-    if max_records:
-        params["MaxRecords"] = max_records
-    if marker:
-        params["Marker"] = marker
+    params = build_params(
+        DBInstanceIdentifier=db_instance_identifier,
+        Filters=format_filters(filters),
+        MaxRecords=max_records,
+        Marker=marker,
+    )
 
     response = rds.describe_db_instances(**params)
     return response

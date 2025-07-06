@@ -1,7 +1,6 @@
 from typing import Any
 
-import boto3
-
+from ...core.utils import build_params, create_aws_client
 from ...mcp import mcp
 
 
@@ -69,30 +68,24 @@ async def cloudwatch_get_metric_statistics(
     dimensions: list[dict[str, str]] | None = None,
     unit: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    cloudwatch = session.client("cloudwatch", region_name=region)
+    cloudwatch = create_aws_client(profile_name, region, "cloudwatch")
 
-    params = {
-        "Namespace": namespace,
-        "MetricName": metric_name,
-        "StartTime": start_time,
-        "EndTime": end_time,
-        "Period": period,
-    }
+    # Set default statistics if none provided
+    final_statistics = (
+        statistics if statistics else (None if extended_statistics else ["Average"])
+    )
 
-    if statistics:
-        params["Statistics"] = statistics
-    elif not extended_statistics:
-        params["Statistics"] = ["Average"]
-
-    if extended_statistics:
-        params["ExtendedStatistics"] = extended_statistics
-
-    if dimensions:
-        params["Dimensions"] = dimensions
-
-    if unit:
-        params["Unit"] = unit
+    params = build_params(
+        Namespace=namespace,
+        MetricName=metric_name,
+        StartTime=start_time,
+        EndTime=end_time,
+        Period=period,
+        Statistics=final_statistics,
+        ExtendedStatistics=extended_statistics,
+        Dimensions=dimensions,
+        Unit=unit,
+    )
 
     response = cloudwatch.get_metric_statistics(**params)
     return response

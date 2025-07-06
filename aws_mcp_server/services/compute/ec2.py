@@ -1,7 +1,6 @@
 from typing import Any
 
-import boto3
-
+from ...core.utils import build_params, create_aws_client, format_filters
 from ...mcp import mcp
 
 
@@ -73,24 +72,14 @@ async def ec2_describe_instances(
     max_results: int | None = None,
     next_token: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    ec2 = session.client("ec2", region_name=region)
+    ec2 = create_aws_client(profile_name, region, "ec2")
 
-    params: dict[str, Any] = {}
-    if instance_ids:
-        params["InstanceIds"] = instance_ids
-    if filters:
-        params["Filters"] = [
-            {
-                "Name": k,
-                "Values": [str(value) for value in (v if isinstance(v, list) else [v])],
-            }
-            for k, v in filters.items()
-        ]
-    if max_results:
-        params["MaxResults"] = max_results
-    if next_token:
-        params["NextToken"] = next_token
+    params = build_params(
+        InstanceIds=instance_ids,
+        Filters=format_filters(filters),
+        MaxResults=max_results,
+        NextToken=next_token,
+    )
 
     response = ec2.describe_instances(**params)
     return response
@@ -161,23 +150,15 @@ async def ec2_describe_security_groups(
     max_results: int | None = None,
     next_token: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    ec2 = session.client("ec2", region_name=region)
+    ec2 = create_aws_client(profile_name, region, "ec2")
 
-    params: dict[str, Any] = {}
-    if group_ids:
-        params["GroupIds"] = group_ids
-    if group_names:
-        params["GroupNames"] = group_names
-    if filters:
-        params["Filters"] = [
-            {"Name": k, "Values": v if isinstance(v, list) else [v]}
-            for k, v in filters.items()
-        ]
-    if max_results:
-        params["MaxResults"] = max_results
-    if next_token:
-        params["NextToken"] = next_token
+    params = build_params(
+        GroupIds=group_ids,
+        GroupNames=group_names,
+        Filters=format_filters(filters),
+        MaxResults=max_results,
+        NextToken=next_token,
+    )
 
     response = ec2.describe_security_groups(**params)
     return response
@@ -251,21 +232,14 @@ async def ec2_describe_vpcs(
     max_results: int | None = None,
     next_token: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    ec2 = session.client("ec2", region_name=region)
+    ec2 = create_aws_client(profile_name, region, "ec2")
 
-    params: dict[str, Any] = {}
-    if vpc_ids:
-        params["VpcIds"] = vpc_ids
-    if filters:
-        params["Filters"] = [
-            {"Name": k, "Values": v if isinstance(v, list) else [v]}
-            for k, v in filters.items()
-        ]
-    if max_results:
-        params["MaxResults"] = max_results
-    if next_token:
-        params["NextToken"] = next_token
+    params = build_params(
+        VpcIds=vpc_ids,
+        Filters=format_filters(filters),
+        MaxResults=max_results,
+        NextToken=next_token,
+    )
 
     response = ec2.describe_vpcs(**params)
     return response
