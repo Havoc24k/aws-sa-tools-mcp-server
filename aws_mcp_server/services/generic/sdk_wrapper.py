@@ -2,6 +2,7 @@ from typing import Any
 
 import boto3
 
+from ...core.utils import create_aws_client
 from ...mcp import mcp
 
 
@@ -42,9 +43,7 @@ async def aws_sdk_wrapper(
     profile_name: str,
     operation_kwargs: dict[str, Any],
 ) -> Any:
-    # Get the AWS credentials
-    session = boto3.Session(profile_name=profile_name)
-    client = session.client(service_name, region_name=region_name)
+    client = create_aws_client(profile_name, region_name, service_name)
     method = getattr(client, operation_name)
     response = method(**operation_kwargs)
     return response

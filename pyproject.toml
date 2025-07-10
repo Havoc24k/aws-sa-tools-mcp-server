@@ -1,10 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "aws-mcp-server"
 version = "0.2.3"
 description = "AWS MCP Server"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["boto3>=1.37.18", "mcp[cli]>=1.5.0"]
+dependencies = ["boto3>=1.37.18", "fastmcp[sse]>=1.5.0", "chromadb>=0.5.0", "pypdf>=4.0.0", "requests>=2.31.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aws_mcp_server*"]
+exclude = ["tests*", "chroma_db*", "datasource*"]
 
 [dependency-groups]
 test = [

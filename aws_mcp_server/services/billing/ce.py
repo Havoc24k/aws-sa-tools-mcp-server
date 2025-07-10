@@ -1,7 +1,6 @@
 from typing import Any
 
-import boto3
-
+from ...core.utils import build_params, create_aws_client
 from ...mcp import mcp
 
 
@@ -110,21 +109,16 @@ async def ce_get_cost_and_usage(
     filter_expression: dict[str, Any] | None = None,
     next_page_token: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    ce = session.client("ce", region_name=region)
+    ce = create_aws_client(profile_name, region, "ce")
 
-    params = {
-        "TimePeriod": {"Start": start, "End": end},
-        "Granularity": granularity,
-        "Metrics": metrics or ["BlendedCost"],
-    }
-
-    if group_by:
-        params["GroupBy"] = group_by
-    if filter_expression:
-        params["Filter"] = filter_expression
-    if next_page_token:
-        params["NextPageToken"] = next_page_token
+    params = build_params(
+        TimePeriod={"Start": start, "End": end},
+        Granularity=granularity,
+        Metrics=metrics or ["BlendedCost"],
+        GroupBy=group_by,
+        Filter=filter_expression,
+        NextPageToken=next_page_token,
+    )
 
     response = ce.get_cost_and_usage(**params)
     return response
@@ -238,21 +232,16 @@ async def ce_get_cost_and_usage_with_resources(
     filter_expression: dict[str, Any] | None = None,
     next_page_token: str | None = None,
 ) -> Any:
-    session = boto3.Session(profile_name=profile_name)
-    ce = session.client("ce", region_name=region)
+    ce = create_aws_client(profile_name, region, "ce")
 
-    params = {
-        "TimePeriod": {"Start": start, "End": end},
-        "Granularity": granularity,
-        "Metrics": metrics or ["BlendedCost"],
-    }
-
-    if group_by:
-        params["GroupBy"] = group_by
-    if filter_expression:
-        params["Filter"] = filter_expression
-    if next_page_token:
-        params["NextPageToken"] = next_page_token
+    params = build_params(
+        TimePeriod={"Start": start, "End": end},
+        Granularity=granularity,
+        Metrics=metrics or ["BlendedCost"],
+        GroupBy=group_by,
+        Filter=filter_expression,
+        NextPageToken=next_page_token,
+    )
 
     response = ce.get_cost_and_usage_with_resources(**params)
     return response
