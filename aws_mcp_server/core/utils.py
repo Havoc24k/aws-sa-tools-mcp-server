@@ -1,96 +1,38 @@
 """Utility functions for AWS MCP server."""
 
-import re
 from datetime import datetime
 from typing import Any
 
 import boto3
 
 
-def sanitize_dict(data: Any) -> Any:
-    """Remove None values from a dictionary recursively.
-
-    Args:
-        data: Dictionary to sanitize or any other value
-
-    Returns:
-        Dictionary with None values removed or original value if not dict
-    """
-    if not isinstance(data, dict):
-        return data
-
-    cleaned = {}
-    for key, value in data.items():
-        if value is None:
-            continue
-        elif isinstance(value, dict):
-            cleaned_value = sanitize_dict(value)
-            if cleaned_value:  # Only add if not empty after cleaning
-                cleaned[key] = cleaned_value
-        elif isinstance(value, list):
-            cleaned_list = [
-                sanitize_dict(item) if isinstance(item, dict) else item
-                for item in value
-                if item is not None
-            ]
-            if cleaned_list:
-                cleaned[key] = cleaned_list
-        else:
-            cleaned[key] = value
-
-    return cleaned
+def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Remove None values from dictionary (simplified approach)."""
+    return {k: v for k, v in data.items() if v is not None}
 
 
-def validate_aws_identifier(identifier: str, identifier_type: str) -> bool:
-    """Validate AWS resource identifier format.
-
-    Args:
-        identifier: The identifier to validate
-        identifier_type: Type of identifier (e.g., 'instance_id', 'vpc_id', 'bucket_name')
-
-    Returns:
-        True if identifier is valid format, False otherwise
-    """
-    patterns = {
-        "instance_id": r"^i-[0-9a-f]{8,17}$",
-        "vpc_id": r"^vpc-[0-9a-f]{8,17}$",
-        "subnet_id": r"^subnet-[0-9a-f]{8,17}$",
-        "security_group_id": r"^sg-[0-9a-f]{8,17}$",
-        "bucket_name": r"^[a-z0-9.\-]{3,63}$",
-        "db_instance_identifier": r"^[a-zA-Z][a-zA-Z0-9\-]{0,62}$",
-    }
-
-    pattern = patterns.get(identifier_type)
-    if not pattern:
-        return True  # Unknown type, assume valid
-
-    return bool(re.match(pattern, identifier))
+def validate_aws_identifier(identifier: str) -> bool:
+    """Simple AWS identifier validation."""
+    return bool(
+        identifier and len(identifier) > 3 and identifier.replace("-", "").isalnum()
+    )
 
 
 def format_aws_timestamp(timestamp: Any) -> str | None:
-    """Format AWS timestamp to ISO string.
-
-    Args:
-        timestamp: AWS timestamp (datetime or string)
-
-    Returns:
-        ISO formatted timestamp string or None
-    """
-    if timestamp is None:
-        return None
-
-    if isinstance(timestamp, datetime):
-        return timestamp.isoformat()
-
-    if isinstance(timestamp, str):
-        try:
-            # Try to parse and reformat
-            dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            return dt.isoformat()
-        except ValueError:
-            return timestamp
-
-    return str(timestamp)
+    """Format AWS timestamp to ISO string using pattern matching."""
+    match timestamp:
+        case None:
+            return None
+        case datetime():
+            return timestamp.isoformat()
+        case str():
+            try:
+                dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                return dt.isoformat()
+            except ValueError:
+                return timestamp
+        case _:
+            return str(timestamp)
 
 
 def chunk_list(items: list[Any], chunk_size: int) -> list[list[Any]]:
@@ -108,27 +50,13 @@ def chunk_list(items: list[Any], chunk_size: int) -> list[list[Any]]:
 
 def merge_filters(
     base_filters: dict[str, Any] | None, additional_filters: dict[str, Any] | None
-) -> dict[str, Any] | None:
-    """Merge two filter dictionaries.
-
-    Args:
-        base_filters: Base filter dictionary
-        additional_filters: Additional filters to merge
-
-    Returns:
-        Merged filter dictionary
-    """
+) -> dict[str, Any]:
+    """Merge two filter dictionaries."""
     if not base_filters and not additional_filters:
         return {}
 
-    if not base_filters:
-        return additional_filters or {}
-
-    if not additional_filters:
-        return base_filters
-
-    merged = base_filters.copy()
-    merged.update(additional_filters)
+    merged = (base_filters or {}).copy()
+    merged.update(additional_filters or {})
     return merged
 
 
@@ -182,7 +110,7 @@ def paginate_results(
     operation_name: str,
     params: dict[str, Any],
 ) -> dict[str, Any]:
-    """Handle pagination for AWS API calls.
+    """Handle pagination for AWS API calls using boto3's built-in pagination.
 
     Args:
         client: Boto3 client instance
@@ -193,22 +121,4 @@ def paginate_results(
         Combined results from all pages
     """
     paginator = client.get_paginator(operation_name)
-    pages = paginator.paginate(**params)
-
-    # Combine all pages into a single result
-    combined_result: dict[str, Any] = {}
-    for page in pages:
-        if not combined_result:
-            combined_result = page.copy()
-        else:
-            # Merge results - this is service-specific but works for most cases
-            for key, value in page.items():
-                if isinstance(value, list):
-                    if key in combined_result:
-                        combined_result[key].extend(value)
-                    else:
-                        combined_result[key] = value
-                elif key not in combined_result:
-                    combined_result[key] = value
-
-    return combined_result
+    return paginator.paginate(**params).build_full_result()

@@ -17,19 +17,5 @@ ENABLE_PAGINATION = os.getenv("AWS_MCP_ENABLE_PAGINATION", "true").lower() == "t
 
 # AWS service limits and defaults
 DEFAULT_MAX_RESULTS = int(os.getenv("AWS_MCP_MAX_RESULTS", "1000"))
-DEFAULT_TIMEOUT = int(os.getenv("AWS_MCP_TIMEOUT", "30"))
-
-# Service-specific limits (with fallback to default)
-EC2_INSTANCES_MAX = int(
-    os.getenv("AWS_MCP_EC2_INSTANCES_MAX", str(DEFAULT_MAX_RESULTS))
-)
-EC2_SECURITY_GROUPS_MAX = int(
-    os.getenv("AWS_MCP_EC2_SECURITY_GROUPS_MAX", str(DEFAULT_MAX_RESULTS))
-)
-EC2_VPCS_MAX = int(os.getenv("AWS_MCP_EC2_VPCS_MAX", str(DEFAULT_MAX_RESULTS)))
-RDS_INSTANCES_MAX = int(os.getenv("AWS_MCP_RDS_INSTANCES_MAX", "100"))
-S3_OBJECTS_MAX = int(os.getenv("AWS_MCP_S3_OBJECTS_MAX", str(DEFAULT_MAX_RESULTS)))
-
-# Timeout settings (in seconds)
-AWS_API_CALL_TIMEOUT = int(os.getenv("AWS_MCP_API_TIMEOUT", str(DEFAULT_TIMEOUT)))
-PAGINATION_TIMEOUT = int(os.getenv("AWS_MCP_PAGINATION_TIMEOUT", "300"))
+# Simplified configuration - use single values for all services (KISS principle)
+DEFAULT_TIMEOUT_SECONDS = int(os.getenv("AWS_MCP_TIMEOUT", "30"))

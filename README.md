@@ -145,18 +145,30 @@ When `--enable-vector-store` is enabled:
 
 See `VECTOR_STORE.md` for detailed documentation on vector store features.
 
-## API Examples with curl
+## Using the Server via HTTP/curl
 
-When running with SSE transport (`--sse`), you can interact with the server using standard HTTP requests. Here are working examples:
+When running with SSE transport (`--sse`), you can interact with the server using standard HTTP requests with JSON-RPC 2.0. This makes it easy to integrate with any programming language or tool that can make HTTP requests.
 
-### 1. Get Session ID
+### Complete Workflow Example
+
+Here's a complete workflow showing how to discover and use AWS tools:
+
+#### 1. Start the Server
 
 ```bash
+# Start server in SSE mode
+python -m aws_mcp_server.server --sse --port 8888
+```
+
+#### 2. Get Session ID
+
+```bash
+# Get session ID for subsequent requests
 SESSION_ID=$(timeout 3 curl -N -H 'Accept: text/event-stream' http://localhost:8888/sse 2>/dev/null | grep 'session_id=' | grep -o 'session_id=[a-f0-9]*' | cut -d'=' -f2)
 echo "Session ID: $SESSION_ID"
 ```
 
-### 2. Initialize MCP Session
+#### 3. Initialize MCP Session
 
 ```bash
 curl -X POST \
@@ -175,9 +187,18 @@ curl -X POST \
     }
   }' \
   "http://localhost:8888/messages/?session_id=$SESSION_ID"
+
+# Send initialization complete notification
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized"
+  }' \
+  "http://localhost:8888/messages/?session_id=$SESSION_ID"
 ```
 
-### 3. Search Vector Store (when enabled)
+#### 4. Discover Available Tools
 
 ```bash
 curl -X POST \
@@ -185,36 +206,24 @@ curl -X POST \
   -d '{
     "jsonrpc": "2.0",
     "id": 2,
-    "method": "tools/call",
-    "params": {
-      "name": "document_search",
-      "arguments": {
-        "query": "AWS security best practices encryption",
-        "n_results": 2
-      }
-    }
+    "method": "tools/list",
+    "params": {}
   }' \
   "http://localhost:8888/messages/?session_id=$SESSION_ID"
 ```
 
-### 4. Get Vector Store Information
+This returns all available tools with their schemas, including:
+- `s3-list_buckets` - List S3 buckets
+- `s3-list_objects_v2` - List objects in S3 buckets
+- `ec2-describe_instances` - Get EC2 instance details
+- `ec2-describe_security_groups` - List security groups
+- `ec2-describe_vpcs` - List VPCs
+- `rds-describe_db_instances` - Get RDS database info
+- `ce-get_cost_and_usage` - Cost Explorer reports
+- `cloudwatch-get_metric_statistics` - CloudWatch metrics
+- `aws_sdk_wrapper` - Generic AWS SDK operations
 
-```bash
-curl -X POST \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "tools/call",
-    "params": {
-      "name": "vector_store_info",
-      "arguments": {}
-    }
-  }' \
-  "http://localhost:8888/messages/?session_id=$SESSION_ID"
-```
-
-### 5. AWS Service Examples
+#### 5. Use AWS Tools
 
 ```bash
 # List S3 buckets
@@ -222,13 +231,13 @@ curl -X POST \
   -H 'Content-Type: application/json' \
   -d '{
     "jsonrpc": "2.0",
-    "id": 4,
+    "id": 3,
     "method": "tools/call",
     "params": {
-      "name": "s3_list_buckets",
+      "name": "s3-list_buckets",
       "arguments": {
-        "region_name": "us-east-1",
-        "profile_name": "default"
+        "profile_name": "default",
+        "region": "us-east-1"
       }
     }
   }' \
@@ -239,13 +248,81 @@ curl -X POST \
   -H 'Content-Type: application/json' \
   -d '{
     "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "ec2-describe_instances",
+      "arguments": {
+        "profile_name": "default",
+        "region": "us-east-1"
+      }
+    }
+  }' \
+  "http://localhost:8888/messages/?session_id=$SESSION_ID"
+
+# Get cost analysis
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jsonrpc": "2.0",
     "id": 5,
     "method": "tools/call",
     "params": {
-      "name": "ec2_describe_instances",
+      "name": "ce-get_cost_and_usage",
       "arguments": {
-        "region_name": "us-east-1",
-        "profile_name": "default"
+        "profile_name": "default",
+        "region": "us-east-1",
+        "start": "2024-01-01",
+        "end": "2024-01-31",
+        "granularity": "MONTHLY"
+      }
+    }
+  }' \
+  "http://localhost:8888/messages/?session_id=$SESSION_ID"
+```
+
+#### 6. Monitor Responses
+
+To see the actual responses, run this in a separate terminal:
+
+```bash
+# Monitor SSE stream for responses
+curl -N -H 'Accept: text/event-stream' http://localhost:8888/sse
+```
+
+All responses will appear as `event: message` with JSON-RPC 2.0 formatted data.
+
+### Vector Store Examples (when enabled)
+
+If you started the server with `--enable-vector-store`:
+
+```bash
+# Get vector store information
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "vector_store_info",
+      "arguments": {}
+    }
+  }' \
+  "http://localhost:8888/messages/?session_id=$SESSION_ID"
+
+# Search documents
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tools/call",
+    "params": {
+      "name": "document_search",
+      "arguments": {
+        "query": "AWS security best practices",
+        "n_results": 3
       }
     }
   }' \
@@ -254,7 +331,36 @@ curl -X POST \
 
 ### Important Notes
 
-- **Responses**: All requests return 'Accepted' status - actual responses come via the SSE stream
-- **Monitoring**: To see responses, run `curl -N http://localhost:8888/sse` in another terminal
-- **Session**: Each request needs the same `session_id` from step 1
 - **Protocol**: Uses JSON-RPC 2.0 over FastMCP SSE transport
+- **Responses**: All requests return HTTP 202 'Accepted' - actual responses come via SSE stream
+- **Session Management**: Each request must use the same `session_id` obtained in step 2
+- **Credentials**: Ensure AWS credentials are properly configured in `~/.aws/credentials`
+- **Error Handling**: Tools return proper error messages if credentials are missing or invalid
+
+### Integration Examples
+
+This HTTP API makes it easy to integrate with any programming language:
+
+**Python:**
+```python
+import requests
+import json
+
+response = requests.post(f"http://localhost:8888/messages/?session_id={session_id}", 
+    json={
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "s3-list_buckets", "arguments": {"profile_name": "default", "region": "us-east-1"}}
+    })
+```
+
+**JavaScript:**
+```javascript
+fetch(`http://localhost:8888/messages/?session_id=${sessionId}`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        jsonrpc: "2.0", id: 1, method: "tools/call",
+        params: {name: "s3-list_buckets", arguments: {profile_name: "default", region: "us-east-1"}}
+    })
+})
+```

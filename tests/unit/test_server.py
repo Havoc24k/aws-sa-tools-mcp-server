@@ -98,7 +98,7 @@ class TestMain:
         with (
             patch("sys.argv", ["server.py", "--log-file", custom_log_file]),
             patch("aws_mcp_server.server.setup_logging") as mock_setup_logging,
-            patch("aws_mcp_server.server.mcp") as mock_mcp,
+            patch("aws_mcp_server.server.mcp"),
         ):
             main()
 
@@ -154,8 +154,8 @@ class TestMain:
         """Test main function when vector store import fails"""
         with (
             patch("sys.argv", ["server.py", "--enable-vector-store"]),
-            patch("aws_mcp_server.server.setup_logging") as mock_setup_logging,
-            patch("aws_mcp_server.server.mcp") as mock_mcp,
+            patch("aws_mcp_server.server.setup_logging"),
+            patch("aws_mcp_server.server.mcp"),
             patch("builtins.__import__", side_effect=ImportError("Module not found")),
         ):
             # Should not raise an exception

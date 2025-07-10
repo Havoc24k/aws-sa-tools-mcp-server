@@ -24,7 +24,7 @@ class TestAwsRegions:
         assert "other" in AWS_REGIONS
 
         # Test that each area contains regions
-        for area, regions in AWS_REGIONS.items():
+        for _area, regions in AWS_REGIONS.items():
             assert isinstance(regions, dict)
             assert len(regions) > 0
 

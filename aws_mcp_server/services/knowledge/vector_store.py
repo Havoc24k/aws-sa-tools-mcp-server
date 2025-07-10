@@ -2,26 +2,21 @@
 Simple Chroma vector store integration for AWS MCP Server
 """
 
-import os
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings
 
+from ...core.config import VECTOR_CONFIG
 from ...mcp import mcp
-
-# Simple configuration constants
-CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-COLLECTION_NAME = "aws_docs"
 
 # Initialize Chroma client with persistent storage
 chroma_client = chromadb.PersistentClient(
-    path=CHROMA_DB_PATH, settings=Settings(allow_reset=True)
+    path=VECTOR_CONFIG.db_path, settings=Settings(allow_reset=True)
 )
 
 
-def get_or_create_collection(collection_name: str = COLLECTION_NAME) -> Any:
+def get_or_create_collection(collection_name: str = VECTOR_CONFIG.collection_name) -> Any:
     """Get or create a Chroma collection"""
     try:
         return chroma_client.get_collection(name=collection_name)
@@ -40,7 +35,7 @@ async def vector_store_add(
     documents: list[str],
     ids: list[str] | None = None,
     metadatas: list[dict[str, Any]] | None = None,
-    collection_name: str = COLLECTION_NAME,
+    collection_name: str = VECTOR_CONFIG.collection_name,
 ) -> dict[str, Any]:
     """
     Add documents to the vector store
@@ -87,7 +82,7 @@ async def vector_store_add(
 async def vector_store_search(
     query: str,
     n_results: int = 5,
-    collection_name: str = COLLECTION_NAME,
+    collection_name: str = VECTOR_CONFIG.collection_name,
     include_distances: bool = True,
 ) -> dict[str, Any]:
     """
@@ -125,19 +120,26 @@ async def vector_store_search(
             include=include_list,
         )
 
-        # Format results
+        # Format results using Pythonic iteration
         results = []
-        for i in range(len(search_results["documents"][0])):
+        for rank, (doc_id, document, metadata) in enumerate(
+            zip(
+                search_results["ids"][0],
+                search_results["documents"][0],
+                search_results["metadatas"][0],
+                strict=False,
+            ),
+            1,
+        ):
             result = {
-                "id": search_results["ids"][0][i],
-                "document": search_results["documents"][0][i],
-                "metadata": search_results["metadatas"][0][i],
-                "rank": i + 1,
+                "id": doc_id,
+                "document": document,
+                "metadata": metadata,
+                "rank": rank,
             }
 
             if include_distances:
-                # Convert distance to similarity score (0-1, higher is better)
-                distance = search_results["distances"][0][i]
+                distance = search_results["distances"][0][rank - 1]
                 result["similarity_score"] = max(0, 1 - distance)
                 result["distance"] = distance
 
@@ -159,7 +161,7 @@ async def vector_store_search(
     name="vector_store_info",
     description="Get information about the vector store collections",
 )
-async def vector_store_info(collection_name: str = COLLECTION_NAME) -> dict[str, Any]:
+async def vector_store_info(collection_name: str = VECTOR_CONFIG.collection_name) -> dict[str, Any]:
     """
     Get information about a vector store collection
 
@@ -187,7 +189,7 @@ async def vector_store_info(collection_name: str = COLLECTION_NAME) -> dict[str,
             "success": True,
             "current_collection": collection_info,
             "all_collections": collection_names,
-            "database_path": CHROMA_DB_PATH,
+            "database_path": VECTOR_CONFIG.db_path,
         }
 
     except Exception as e:
@@ -198,7 +200,7 @@ async def vector_store_info(collection_name: str = COLLECTION_NAME) -> dict[str,
     name="vector_store_reset",
     description="Reset/clear a vector store collection (use with caution)",
 )
-async def vector_store_reset(collection_name: str = COLLECTION_NAME) -> dict[str, Any]:
+async def vector_store_reset(collection_name: str = VECTOR_CONFIG.collection_name) -> dict[str, Any]:
     """
     Reset a vector store collection (removes all documents)
 

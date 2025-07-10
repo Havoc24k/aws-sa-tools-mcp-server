@@ -93,20 +93,20 @@ async def document_ingest(
         }
 
         # Create chunk metadata and IDs
-        chunk_metadatas = []
-        chunk_ids = []
-
         safe_title = create_safe_document_id(document_title)
 
-        for i, chunk in enumerate(chunks):
-            chunk_metadata = {
+        # Use list comprehensions for Pythonic code
+        chunk_metadatas = [
+            {
                 **base_metadata,
                 "chunk_index": i,
                 "total_chunks": len(chunks),
                 "chunk_size": len(chunk),
             }
-            chunk_metadatas.append(chunk_metadata)
-            chunk_ids.append(f"{safe_title}_chunk_{i:04d}")
+            for i, chunk in enumerate(chunks)
+        ]
+
+        chunk_ids = [f"{safe_title}_chunk_{i:04d}" for i in range(len(chunks))]
 
         # Add to vector store
         result = await vector_store_add(
@@ -321,9 +321,7 @@ async def document_categories() -> dict[str, Any]:
 
 
 def create_smart_chunks(text: str, chunk_size: int, overlap_size: int) -> list[str]:
-    """
-    Create intelligent text chunks with better boundary detection
-    """
+    """Create simple text chunks with sentence boundary detection"""
     if len(text) <= chunk_size:
         return [text]
 
@@ -337,41 +335,15 @@ def create_smart_chunks(text: str, chunk_size: int, overlap_size: int) -> list[s
             chunks.append(text[start:].strip())
             break
 
-        # Look for good break points
+        # Find last sentence ending before chunk limit using walrus operator
         chunk_text = text[start:end]
 
-        # Priority order for break points
-        break_patterns = [
-            (r"\n\n\n+", 3),  # Multiple line breaks (section breaks)
-            (r"\n\n", 2),  # Paragraph breaks
-            (r"\. [A-Z]", 1),  # Sentence endings
-            (r"\n", 1),  # Line breaks
-            (r" ", 0),  # Word boundaries
-        ]
-
-        best_break = -1
-        min_chunk_ratio = 0.6  # Don't break too early
-
-        for pattern, _priority in break_patterns:
-            matches = list(re.finditer(pattern, chunk_text))
-            for match in reversed(matches):  # Start from end
-                break_pos = match.start() + len(match.group())
-                if break_pos > chunk_size * min_chunk_ratio:
-                    best_break = break_pos
-                    break
-            if best_break > 0:
-                break
-
-        if best_break > 0:
-            chunks.append(text[start : start + best_break].strip())
-            start = start + best_break - overlap_size
+        if (sentence_end := chunk_text.rfind(". ")) > chunk_size * 0.5:
+            chunks.append(text[start : start + sentence_end + 1].strip())
+            start = start + sentence_end + 1 - overlap_size
         else:
             chunks.append(chunk_text)
             start = end - overlap_size
-
-        # Ensure progress
-        if start <= 0:
-            start = chunk_size
 
     return [chunk for chunk in chunks if chunk.strip()]
 
