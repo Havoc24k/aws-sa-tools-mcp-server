@@ -81,7 +81,7 @@ test = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.37.18" },
     { name = "chromadb", specifier = ">=0.5.0" },
-    { name = "fastmcp", extras = ["sse"], specifier = ">=1.5.0" },
+    { name = "fastmcp", specifier = ">=1.5.0" },
     { name = "pypdf", specifier = ">=4.0.0" },
     { name = "requests", specifier = ">=2.31.0" },
 ]

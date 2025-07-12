@@ -81,7 +81,9 @@ class TestValidateAWSIdentifier:
         """Test edge cases."""
         assert validate_aws_identifier("abcd") is True  # Minimum length
         assert validate_aws_identifier("test-123") is True  # With dash
-        assert validate_aws_identifier("test_123") is False  # Underscore not alphanumeric
+        assert (
+            validate_aws_identifier("test_123") is False
+        )  # Underscore not alphanumeric
 
 
 class TestFormatAWSTimestamp:
@@ -169,7 +171,9 @@ class TestPaginateResults:
 
         mock_client.get_paginator.return_value = mock_paginator
         mock_paginator.paginate.return_value = mock_page_iterator
-        mock_page_iterator.build_full_result.return_value = {"Items": [{"id": 1}, {"id": 2}]}
+        mock_page_iterator.build_full_result.return_value = {
+            "Items": [{"id": 1}, {"id": 2}]
+        }
 
         result = paginate_results(mock_client, "describe_items", {"MaxItems": 10})
 
@@ -277,6 +281,7 @@ class TestCreateAWSClient:
         # We can't easily test this without mocking boto3
         # but we can verify the function signature
         import inspect
+
         sig = inspect.signature(create_aws_client)
         expected_params = ["profile_name", "region", "service_name"]
         actual_params = list(sig.parameters.keys())

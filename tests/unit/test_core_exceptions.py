@@ -53,7 +53,7 @@ class TestExceptionUsage:
         with pytest.raises(AWSMCPError):
             raise_aws_error()
 
-        with pytest.raises(Exception):
+        with pytest.raises(AWSMCPError):
             raise_aws_error()
 
     def test_exception_with_detailed_message(self):

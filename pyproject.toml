@@ -8,7 +8,13 @@ version = "0.2.3"
 description = "AWS MCP Server"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["boto3>=1.37.18", "fastmcp[sse]>=1.5.0", "chromadb>=0.5.0", "pypdf>=4.0.0", "requests>=2.31.0"]
+dependencies = [
+    "boto3>=1.37.18",
+    "fastmcp>=1.5.0",
+    "chromadb>=0.5.0",
+    "pypdf>=4.0.0",
+    "requests>=2.31.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -22,13 +28,9 @@ test = [
     "pytest-cov>=5.0.0",
     "moto>=5.0.0",
     "pytest-mock>=3.12.0",
-    "coverage>=7.6.0"
+    "coverage>=7.6.0",
 ]
-dev = [
-    "ruff>=0.7.0",
-    "mypy>=1.13.0",
-    "black>=24.0.0"
-]
+dev = ["ruff>=0.7.0", "mypy>=1.13.0", "black>=24.0.0"]
 
 [project.scripts]
 "aws-mcp-server" = "aws_mcp_server.server:main"
@@ -48,8 +50,8 @@ select = [
 ]
 
 ignore = [
-    "E501",   # Line too long, handled by formatter
-    "F401",   # Module imported but unused (needed for MCP tool registration)
+    "E501", # Line too long, handled by formatter
+    "F401", # Module imported but unused (needed for MCP tool registration)
 ]
 
 fixable = ["ALL"]

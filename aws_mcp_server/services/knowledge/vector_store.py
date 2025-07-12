@@ -16,7 +16,9 @@ chroma_client = chromadb.PersistentClient(
 )
 
 
-def get_or_create_collection(collection_name: str = VECTOR_CONFIG.collection_name) -> Any:
+def get_or_create_collection(
+    collection_name: str = VECTOR_CONFIG.collection_name,
+) -> Any:
     """Get or create a Chroma collection"""
     try:
         return chroma_client.get_collection(name=collection_name)
@@ -161,7 +163,9 @@ async def vector_store_search(
     name="vector_store_info",
     description="Get information about the vector store collections",
 )
-async def vector_store_info(collection_name: str = VECTOR_CONFIG.collection_name) -> dict[str, Any]:
+async def vector_store_info(
+    collection_name: str = VECTOR_CONFIG.collection_name,
+) -> dict[str, Any]:
     """
     Get information about a vector store collection
 
@@ -200,7 +204,9 @@ async def vector_store_info(collection_name: str = VECTOR_CONFIG.collection_name
     name="vector_store_reset",
     description="Reset/clear a vector store collection (use with caution)",
 )
-async def vector_store_reset(collection_name: str = VECTOR_CONFIG.collection_name) -> dict[str, Any]:
+async def vector_store_reset(
+    collection_name: str = VECTOR_CONFIG.collection_name,
+) -> dict[str, Any]:
     """
     Reset a vector store collection (removes all documents)
 

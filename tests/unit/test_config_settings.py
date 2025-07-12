@@ -68,17 +68,13 @@ class TestSimplifiedSettings:
         ]
 
         for value, expected in debug_values:
-            with patch.dict(
-                os.environ, {"AWS_MCP_DEBUG": value}, clear=True
-            ):
+            with patch.dict(os.environ, {"AWS_MCP_DEBUG": value}, clear=True):
                 import importlib
 
                 from aws_mcp_server.config import settings as settings_module
 
                 importlib.reload(settings_module)
-                assert settings_module.DEBUG is expected, (
-                    f"Failed for value: {value}"
-                )
+                assert settings_module.DEBUG is expected, f"Failed for value: {value}"
 
     def test_settings_pagination_variations(self):
         """Test different pagination value variations."""

@@ -13,6 +13,7 @@ from ...mcp import mcp
 )
 async def s3_list_buckets(profile_name: str, region: str) -> Any:
     from ...core.utils import create_aws_client
+
     s3 = create_aws_client(profile_name, region, "s3")
     return s3.list_buckets()
 

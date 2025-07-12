@@ -26,6 +26,7 @@ def aws_tool_simple(
     - MCP tool registration
     - Basic error handling
     """
+
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @mcp.tool(
             name=name,
@@ -44,6 +45,7 @@ def aws_tool_simple(
             return operation_func(**params)
 
         return wrapper
+
     return decorator
 
 
