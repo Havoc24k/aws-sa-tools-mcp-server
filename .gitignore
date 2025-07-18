@@ -49,3 +49,11 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Deployment files
+deployment/terraform/terraform.tfstate
+deployment/terraform/terraform.tfstate.backup
+deployment/terraform/.terraform/
+deployment/terraform/.terraform.lock.hcl
+deployment/terraform/*.tfvars
+deployment/terraform/*.tfvars.json

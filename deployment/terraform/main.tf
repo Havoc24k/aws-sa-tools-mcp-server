@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9"
+    }
   }
 }
 
@@ -22,7 +26,7 @@ resource "aws_iam_role" "apprunner_service_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "apprunner.amazonaws.com"
+          Service = "build.apprunner.amazonaws.com"
         }
       }
     ]
@@ -45,6 +49,12 @@ resource "aws_iam_role" "apprunner_instance_role" {
       }
     ]
   })
+}
+
+# Attach ECR access policy to App Runner service role
+resource "aws_iam_role_policy_attachment" "apprunner_service_ecr_access" {
+  role       = aws_iam_role.apprunner_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
 }
 
 # Attach AWS managed policies for common AWS service access
@@ -78,11 +88,33 @@ resource "aws_ecr_repository" "mcp_server" {
   }
 }
 
+# Wait for IAM policy propagation
+resource "time_sleep" "wait_for_iam_policy_propagation" {
+  depends_on = [aws_iam_role_policy_attachment.apprunner_service_ecr_access]
+  
+  create_duration = "30s"
+}
+
+# Auto-scaling configuration for demo environment
+resource "aws_apprunner_auto_scaling_configuration_version" "demo_scaling" {
+  auto_scaling_configuration_name = "${var.service_name}-demo-scaling"
+  min_size                       = 1
+  max_size                       = 2
+  max_concurrency               = 10
+
+  tags = {
+    Name        = "${var.service_name}-demo-scaling"
+    Environment = var.environment
+  }
+}
+
 # App Runner service
 resource "aws_apprunner_service" "mcp_server" {
   service_name = var.service_name
 
   source_configuration {
+    auto_deployments_enabled = false
+    
     image_repository {
       image_identifier      = "${aws_ecr_repository.mcp_server.repository_url}:latest"
       image_configuration {
@@ -95,8 +127,17 @@ resource "aws_apprunner_service" "mcp_server" {
       }
       image_repository_type = "ECR"
     }
-    auto_deployments_enabled = false
+    
+    authentication_configuration {
+      access_role_arn = aws_iam_role.apprunner_service_role.arn
+    }
   }
+
+  # Authentication configuration for ECR
+  depends_on = [
+    aws_iam_role_policy_attachment.apprunner_service_ecr_access,
+    time_sleep.wait_for_iam_policy_propagation
+  ]
 
   instance_configuration {
     cpu               = var.cpu
@@ -104,10 +145,12 @@ resource "aws_apprunner_service" "mcp_server" {
     instance_role_arn = aws_iam_role.apprunner_instance_role.arn
   }
 
+  auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.demo_scaling.arn
+
   health_check_configuration {
     healthy_threshold   = 1
     interval            = 10
-    path                = "/"
+    path                = "/sse"
     protocol            = "HTTP"
     timeout             = 5
     unhealthy_threshold = 5

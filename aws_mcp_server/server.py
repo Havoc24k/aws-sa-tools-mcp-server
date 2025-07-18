@@ -36,7 +36,8 @@ def main() -> None:
     args = parser.parse_args()
 
     # Set up logging with file output
-    setup_logging(level="INFO", include_timestamp=False, log_file=args.log_file)
+    setup_logging(level="INFO", include_timestamp=False,
+                  log_file=args.log_file)
 
     # Set environment variables for vector store based on CLI flags
     os.environ["ENABLE_VECTOR_STORE"] = str(args.enable_vector_store).lower()
@@ -51,6 +52,7 @@ def main() -> None:
     # Run server with appropriate transport
     if args.sse:
         mcp.settings.port = args.port
+        mcp.settings.host = "0.0.0.0"  # Bind to all interfaces for container deployment
         mcp.run(transport="sse")
     else:
         # Initialize and run the server
