@@ -64,7 +64,7 @@ python -m aws_mcp_server.server --sse --port 8888
 **Terminal 2** - Monitor responses:
 
 ```bash
-curl -N -H 'Accept: text/event-stream' http://localhost:8888/sse
+curl -N -H 'Accept: text/event-stream' https://9dytmhc5tm.eu-central-1.awsapprunner.com/sse
 ```
 
 **Terminal 3** - Send commands:
@@ -80,16 +80,16 @@ curl -X POST -H 'Content-Type: application/json' -d '{
     "protocolVersion": "2024-11-05", "capabilities": {},
     "clientInfo": {"name": "curl-client", "version": "1.0.0"}
   }
-}' "http://localhost:8888/messages/?session_id=$SESSION_ID"
+}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
 
 curl -X POST -H 'Content-Type: application/json' -d '{
   "jsonrpc": "2.0", "method": "notifications/initialized"
-}' "http://localhost:8888/messages/?session_id=$SESSION_ID"
+}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
 
 # List tools
 curl -X POST -H 'Content-Type: application/json' -d '{
   "jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}
-}' "http://localhost:8888/messages/?session_id=$SESSION_ID"
+}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
 
 # List S3 buckets
 curl -X POST -H 'Content-Type: application/json' -d '{
@@ -98,7 +98,7 @@ curl -X POST -H 'Content-Type: application/json' -d '{
     "name": "s3-list_buckets",
     "arguments": {"profile_name": "default", "region": "us-east-1"}
   }
-}' "http://localhost:8888/messages/?session_id=$SESSION_ID"
+}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
 ```
 
 All responses appear in Terminal 2 as JSON-RPC 2.0 formatted data.
