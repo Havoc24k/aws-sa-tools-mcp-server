@@ -65,8 +65,8 @@ from ...mcp import mcp
     """,
 )
 async def ec2_describe_instances(
-    profile_name: str,
     region: str,
+    profile_name: str = "default",
     instance_ids: list[str] | None = None,
     filters: dict[str, Any] | None = None,
     max_results: int | None = None,
@@ -142,8 +142,8 @@ async def ec2_describe_instances(
     """,
 )
 async def ec2_describe_security_groups(
-    profile_name: str,
     region: str,
+    profile_name: str = "default",
     group_ids: list[str] | None = None,
     group_names: list[str] | None = None,
     filters: dict[str, Any] | None = None,
@@ -225,8 +225,8 @@ async def ec2_describe_security_groups(
     """,
 )
 async def ec2_describe_vpcs(
-    profile_name: str,
     region: str,
+    profile_name: str = "default",
     vpc_ids: list[str] | None = None,
     filters: dict[str, Any] | None = None,
     max_results: int | None = None,
