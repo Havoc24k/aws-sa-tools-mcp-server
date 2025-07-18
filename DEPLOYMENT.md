@@ -1,151 +1,232 @@
 # AWS MCP Server Deployment Guide
 
-This guide covers deploying the AWS MCP Server to AWS App Runner in SSE mode.
+This guide covers deploying the AWS MCP Server to AWS App Runner using Terraform.
 
 ## Quick Deploy
 
 ```bash
-# Run the automated deployment script
-./deploy/scripts/deploy.sh
+# Navigate to Terraform directory
+cd deployment/terraform
+
+# Initialize Terraform
+terraform init
+
+# Deploy with your AWS profile
+AWS_PROFILE=your-profile terraform apply -auto-approve
 ```
 
-## Manual Deployment Steps
-
-### Prerequisites
+## Prerequisites
 
 - AWS CLI configured with appropriate permissions
 - Docker installed
-- Terraform installed (optional, for infrastructure as code)
-
-### 1. Build and Push Container
-
-```bash
-# Set your configuration
-export AWS_REGION=us-east-1
-export AWS_PROFILE=default
-export SERVICE_NAME=aws-mcp-server
-
-# Get AWS account ID
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-ECR_URI="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$SERVICE_NAME"
-
-# Build image
-docker build -t $SERVICE_NAME .
-
-# Create ECR repository
-aws ecr create-repository --repository-name $SERVICE_NAME --region $AWS_REGION
-
-# Login and push
-aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-docker tag $SERVICE_NAME:latest $ECR_URI:latest
-docker push $ECR_URI:latest
-```
-
-### 2. Deploy with Terraform
-
-```bash
-cd deploy/terraform
-terraform init
-terraform apply -var="aws_region=$AWS_REGION" -var="service_name=$SERVICE_NAME"
-```
-
-### 3. Deploy via AWS Console
-
-1. Go to App Runner in AWS Console
-2. Create new service
-3. Source: Container registry
-4. Select your ECR repository
-5. Configure:
-   - Port: 8888
-   - Environment variables:
-     - `AWS_DEFAULT_REGION`: us-east-1
-     - `AWS_MCP_TRANSPORT`: sse
-     - `AWS_MCP_PORT`: 8888
-6. Instance role: Select the created IAM role
-7. Deploy
+- Terraform installed
+- AWS profile configured (default: `HEY`)
 
 ## Configuration
 
+### Default Settings
+
+The deployment is optimized for demo/development with cost-effective settings:
+
+- **Region**: `eu-central-1` (configurable)
+- **Service Name**: `aws-mcp-server`
+- **CPU**: `0.25 vCPU` (minimum)
+- **Memory**: `0.5 GB` (minimum)
+- **Auto-scaling**: 1-2 instances, 10 max concurrency
+- **Health Check**: `/sse` endpoint
+
 ### Environment Variables
 
-- `AWS_DEFAULT_REGION`: AWS region for API calls
-- `AWS_MCP_TRANSPORT`: Set to "sse" for Server-Sent Events
-- `AWS_MCP_PORT`: Port for the server (8888)
+The service runs with these environment variables:
+- `AWS_DEFAULT_REGION`: `eu-central-1`
+- `AWS_MCP_TRANSPORT`: `sse`
+- `AWS_MCP_PORT`: `8888`
+
+## Terraform Deployment
+
+### 1. Navigate to Terraform Directory
+
+```bash
+cd deployment/terraform
+```
+
+### 2. Initialize Terraform
+
+```bash
+terraform init
+```
+
+### 3. Deploy Infrastructure
+
+```bash
+# With specific AWS profile
+AWS_PROFILE=your-profile terraform apply -auto-approve
+
+# With default profile
+terraform apply -auto-approve
+```
+
+### 4. Get Service URL
+
+```bash
+terraform output service_url
+```
+
+## What Gets Deployed
+
+### Infrastructure
+
+- **ECR Repository**: Container registry for Docker images
+- **IAM Roles**: Service and instance roles with minimal permissions
+- **App Runner Service**: Container-based web service
+- **Auto-scaling Configuration**: Demo-optimized scaling (1-2 instances)
 
 ### IAM Permissions
 
-The App Runner instance needs these managed policies:
+The App Runner instance has these managed policies:
 - `AmazonEC2ReadOnlyAccess`
 - `AmazonS3ReadOnlyAccess`
 - `AmazonRDSReadOnlyAccess`
 - `CloudWatchReadOnlyAccess`
 
-For unsafe mode operations, additional permissions required.
+### Security
+
+- HTTPS enabled by default
+- IAM roles follow least privilege principle
+- No AWS credentials stored in container
+- ECR authentication handled automatically
+
+## Container Deployment
+
+The deployment uses container-based deployment with:
+- **Base Image**: Chainguard-based multi-stage build
+- **Port**: 8888 (SSE transport)
+- **Health Check**: `/sse` endpoint
+- **Auto-scaling**: 1-2 instances for demo cost optimization
 
 ## Testing
 
 ```bash
-# Test the deployed service
-curl https://your-apprunner-url.region.awsapprunner.com/
+# Get service URL
+SERVICE_URL=$(terraform output -raw service_url)
 
-# Test SSE endpoint
-curl -H "Accept: text/event-stream" https://your-apprunner-url.region.awsapprunner.com/sse
+# Test health check
+curl -I "https://$SERVICE_URL/sse"
+
+# Test MCP protocol
+curl -X POST -H 'Content-Type: application/json' -d '{
+  "jsonrpc": "2.0", 
+  "id": 1, 
+  "method": "tools/list", 
+  "params": {}
+}' "https://$SERVICE_URL/messages/?session_id=test"
 ```
 
 ## Cost Optimization
 
-- **Development**: 0.25 vCPU, 0.5 GB RAM (~$5-10/month)
-- **Production**: 1 vCPU, 2 GB RAM (~$20-30/month)
+### Demo Configuration (Current)
+- **CPU**: 0.25 vCPU
+- **Memory**: 0.5 GB
+- **Scaling**: 1-2 instances max
+- **Estimated Cost**: ~$5-10/month
 
-App Runner charges for:
-- Active container time
-- Provisioned container capacity
-- Request handling
+### Production Scaling
+To scale for production, update `variables.tf`:
+```hcl
+variable "cpu" {
+  default = "1 vCPU"
+}
+
+variable "memory" {
+  default = "2 GB"
+}
+```
 
 ## Monitoring
 
 App Runner provides built-in monitoring:
 - Application logs in CloudWatch
-- Metrics for CPU, memory, requests
+- CPU, memory, and request metrics
 - Health check monitoring
+- Auto-scaling metrics
+
+### View Logs
+
+```bash
+# List log groups
+aws logs describe-log-groups --log-group-name-prefix "/aws/apprunner"
+
+# View recent logs
+aws logs tail "/aws/apprunner/aws-mcp-server" --follow
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Container fails to start**
-   - Check logs in CloudWatch
-   - Verify Dockerfile builds locally
+1. **Terraform Apply Fails**
+   - Ensure AWS profile has sufficient permissions
+   - Check AWS credentials: `aws sts get-caller-identity`
 
-2. **AWS API access denied**
-   - Verify IAM role permissions
-   - Check AWS credentials configuration
+2. **Service Unhealthy**
+   - Check CloudWatch logs
+   - Verify `/sse` endpoint responds with 200
 
-3. **SSE connections failing**
-   - Ensure port 8888 is properly configured
-   - Check health check endpoint
+3. **ECR Access Denied**
+   - Verify IAM roles are properly configured
+   - Check if ECR repository exists
 
-### Logs
+### Debug Commands
 
-View logs in CloudWatch:
 ```bash
-aws logs describe-log-groups --log-group-name-prefix "/aws/apprunner"
+# Check service status
+aws apprunner describe-service --service-arn $(terraform output -raw service_arn)
+
+# View recent logs
+aws logs tail "/aws/apprunner/aws-mcp-server" --since 1h
+
+# Test health check
+curl -I "https://$(terraform output -raw service_url)/sse"
 ```
 
-## Security
+## Updating the Deployment
 
-- App Runner provides HTTPS by default
-- IAM roles follow least privilege principle
-- No AWS credentials stored in container
-- VPC connectivity available if needed
+To update the service:
 
-## Scaling
+```bash
+# Update Terraform configuration
+terraform plan
 
-App Runner auto-scales based on:
-- Request volume
-- CPU utilization
-- Memory usage
+# Apply changes
+terraform apply -auto-approve
+```
 
-Configure scaling in the service settings:
-- Min instances: 1
-- Max instances: 10 (adjust based on needs)
+## Cleanup
+
+To remove all resources:
+
+```bash
+terraform destroy -auto-approve
+```
+
+## Variables
+
+Customize deployment by modifying `variables.tf`:
+
+```hcl
+variable "service_name" {
+  default = "aws-mcp-server"
+}
+
+variable "aws_region" {
+  default = "eu-central-1"
+}
+
+variable "cpu" {
+  default = "0.25 vCPU"
+}
+
+variable "memory" {
+  default = "0.5 GB"
+}
+```
