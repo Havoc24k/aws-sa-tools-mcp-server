@@ -64,21 +64,13 @@ def create_aws_client(profile_name: str, region: str, service_name: str) -> Any:
     """Create boto3 client for AWS service.
 
     Args:
-        profile_name: AWS profile name from ~/.aws/credentials (optional if SSO session exists)
+        profile_name: AWS profile name from ~/.aws/credentials
         region: AWS region (e.g., 'us-east-1', 'eu-west-1')
         service_name: AWS service name (e.g., 'ec2', 's3', 'rds')
 
     Returns:
         Boto3 client instance
     """
-    from aws_mcp_server.core.sso_auth import sso_session
-    
-    # Try SSO session first
-    session = sso_session.get_session()
-    if session:
-        return session.client(service_name, region_name=region)
-    
-    # Fall back to profile-based authentication
     session = boto3.Session(profile_name=profile_name)
     return session.client(service_name, region_name=region)
 
