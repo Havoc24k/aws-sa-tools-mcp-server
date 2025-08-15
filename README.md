@@ -1,104 +1,82 @@
 # AWS MCP Server
 
-A Model Context Protocol (MCP) server that provides tools to interact with AWS services.
+A Model Context Protocol (MCP) server that provides tools to interact with AWS services through Claude Desktop.
 
 ## Features
 
 - **S3**: List buckets, list objects
-- **EC2**: Describe instances, security groups, VPCs
+- **EC2**: Describe instances, security groups, VPCs  
 - **RDS**: Describe database instances
 - **Cost Explorer**: Get cost and usage reports
 - **CloudWatch**: Retrieve metric statistics
 - **Generic AWS SDK**: Access any AWS operation via `aws_sdk_wrapper`
+- **Vector Store**: Optional document ingestion and search capabilities
 
-## Prerequisites
+## Quick Start
 
+### Prerequisites
 - Python 3.12+
 - AWS credentials configured (`~/.aws/credentials`)
+- Claude Desktop installed
 
-## Installation
+### Installation
 
-Configure Claude Desktop by adding to `claude_desktop_config.json`:
+1. **Install the package:**
+   ```bash
+   pip install aws-mcp-server
+   ```
 
-```json
-{
-    "mcpServers": {
-        "aws-mcp-server": {
-            "command": "uvx",
-            "args": ["--directory", "/path/to/aws-mcp-server", "."]
-        }
-    }
-}
-```
+2. **Configure Claude Desktop:**
+   Add to your `claude_desktop_config.json`:
+   ```json
+   {
+       "mcpServers": {
+           "aws-mcp-server": {
+               "command": "aws-mcp-server"
+           }
+       }
+   }
+   ```
 
-Ensure AWS credentials are configured:
+3. **Configure AWS credentials:**
+   ```bash
+   aws configure
+   # OR manually edit ~/.aws/credentials:
+   ```
+   ```ini
+   [default]
+   aws_access_key_id = YOUR_ACCESS_KEY
+   aws_secret_access_key = YOUR_SECRET_KEY
+   region = us-east-1
+   ```
 
-```ini
-[default]
-aws_access_key_id = YOUR_ACCESS_KEY
-aws_secret_access_key = YOUR_SECRET_KEY
-```
+## Development
 
-## CLI Usage
-
+### Local Development Setup
 ```bash
-# Run with STDIO transport (default)
-python -m aws_mcp_server.server
+# Clone and install
+git clone <repository-url>
+cd aws-mcp-server
+uv sync
 
-# Run with SSE transport for HTTP API
-python -m aws_mcp_server.server --sse --port 8888
+# Run locally
+uvx .
 ```
 
-## HTTP API Usage
-
-When running with `--sse`, you can use curl to interact with the server:
-
-### Setup (3 terminals)
-
-**Terminal 1** - Start server:
-
+### Configuration Options
+Set environment variables for customization:
 ```bash
-python -m aws_mcp_server.server --sse --port 8888
+export AWS_MCP_PORT=8888
+export AWS_MCP_DEBUG=true
+export ENABLE_VECTOR_STORE=true
 ```
 
-**Terminal 2** - Monitor responses:
+## Documentation
 
-```bash
-curl -N -H 'Accept: text/event-stream' https://9dytmhc5tm.eu-central-1.awsapprunner.com/sse
-```
+- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment with AWS App Runner
+- [Vector Store Guide](docs/VECTOR_STORE.md) - Document ingestion and search setup
+- [Workflow Guide](docs/WORKFLOW.md) - Development workflows and patterns
 
-**Terminal 3** - Send commands:
+## License
 
-```bash
-# Set session ID from Terminal 2 output
-SESSION_ID=your_session_id_from_terminal_2
-
-# Initialize session
-curl -X POST -H 'Content-Type: application/json' -d '{
-  "jsonrpc": "2.0", "id": 1, "method": "initialize",
-  "params": {
-    "protocolVersion": "2024-11-05", "capabilities": {},
-    "clientInfo": {"name": "curl-client", "version": "1.0.0"}
-  }
-}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
-
-curl -X POST -H 'Content-Type: application/json' -d '{
-  "jsonrpc": "2.0", "method": "notifications/initialized"
-}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
-
-# List tools
-curl -X POST -H 'Content-Type: application/json' -d '{
-  "jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}
-}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
-
-# List S3 buckets
-curl -X POST -H 'Content-Type: application/json' -d '{
-  "jsonrpc": "2.0", "id": 3, "method": "tools/call",
-  "params": {
-    "name": "s3-list_buckets",
-    "arguments": {"profile_name": "default", "region": "us-east-1"}
-  }
-}' "https://9dytmhc5tm.eu-central-1.awsapprunner.com/messages/?session_id=$SESSION_ID"
-```
-
-All responses appear in Terminal 2 as JSON-RPC 2.0 formatted data.
+MIT License - see LICENSE file for details.
