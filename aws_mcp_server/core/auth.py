@@ -1,8 +1,5 @@
 """AWS authentication utilities."""
 
-import os
-from typing import Any
-
 import boto3
 
 
@@ -56,7 +53,7 @@ def get_default_region(profile_name: str | None = None) -> str | None:
 
 
 def validate_region(region: str) -> bool:
-    """Validate that a region is a valid AWS region.
+    """Validate AWS region using boto3's built-in region discovery.
 
     Args:
         region: AWS region to validate
@@ -64,26 +61,12 @@ def validate_region(region: str) -> bool:
     Returns:
         True if region is valid, False otherwise
     """
-    # List of AWS regions (simplified - in practice you might want to fetch this dynamically)
-    valid_regions = {
-        "us-east-1",
-        "us-east-2",
-        "us-west-1",
-        "us-west-2",
-        "eu-west-1",
-        "eu-west-2",
-        "eu-west-3",
-        "eu-central-1",
-        "eu-north-1",
-        "ap-south-1",
-        "ap-southeast-1",
-        "ap-southeast-2",
-        "ap-northeast-1",
-        "ap-northeast-2",
-        "sa-east-1",
-        "ca-central-1",
-        "ap-east-1",
-        "me-south-1",
-        "af-south-1",
-    }
-    return region in valid_regions
+    try:
+        return region in boto3.Session().get_available_regions('ec2')
+    except Exception:
+        # Fallback to common regions if boto3 call fails
+        common_regions = {
+            "us-east-1", "us-east-2", "us-west-1", "us-west-2",
+            "eu-west-1", "eu-central-1", "ap-southeast-1", "ap-northeast-1"
+        }
+        return region in common_regions

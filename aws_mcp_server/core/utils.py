@@ -18,34 +18,12 @@ def validate_aws_identifier(identifier: str) -> bool:
     )
 
 
-def format_aws_timestamp(timestamp: Any) -> str | None:
-    """Format AWS timestamp to ISO string using pattern matching."""
-    match timestamp:
-        case None:
-            return None
-        case datetime():
-            return timestamp.isoformat()
-        case str():
-            try:
-                dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-                return dt.isoformat()
-            except ValueError:
-                return timestamp
-        case _:
-            return str(timestamp)
+# Note: format_aws_timestamp() function removed - boto3 handles timestamps automatically
+# AWS SDK responses include properly formatted timestamps that don't need manual conversion
 
 
-def chunk_list(items: list[Any], chunk_size: int) -> list[list[Any]]:
-    """Split a list into chunks of specified size.
-
-    Args:
-        items: List to chunk
-        chunk_size: Maximum size of each chunk
-
-    Returns:
-        List of chunked lists
-    """
-    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
+# Note: chunk_list() function removed - use itertools.batched() directly for Python 3.12+
+# For batching: list(itertools.batched(items, chunk_size))
 
 
 def merge_filters(

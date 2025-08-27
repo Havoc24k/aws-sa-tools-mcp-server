@@ -22,12 +22,15 @@ aws-mcp-server
 ### SSE Mode (HTTP API)
 For HTTP-based testing and integration:
 ```bash
-# Run with SSE transport
+# Run with SSE transport 
+# Server binds to 0.0.0.0:8888 (accessible via localhost:8888)
 python -m aws_mcp_server.server --sse --port 8888
 
-# With custom host
-python -m aws_mcp_server.server --sse --host 0.0.0.0 --port 8080
+# With custom port
+python -m aws_mcp_server.server --sse --port 8080
 ```
+
+**Note**: In SSE mode, the server always binds to `0.0.0.0` (all interfaces) but you can access it via `localhost:<port>` for local testing.
 
 ## HTTP API Testing
 
@@ -37,11 +40,13 @@ When running in SSE mode, you can test the server using curl commands.
 
 **Terminal 1** - Start the server:
 ```bash
+# Default port 8888, binds to 0.0.0.0 (all interfaces)
 python -m aws_mcp_server.server --sse --port 8888
 ```
 
 **Terminal 2** - Monitor server responses:
 ```bash
+# Connect via localhost (server binds to 0.0.0.0:8888)
 curl -N -H 'Accept: text/event-stream' http://localhost:8888/sse
 ```
 This will show you the session ID and all server responses.
@@ -156,16 +161,25 @@ curl -X POST \
   "http://localhost:8888/messages/?session_id=$SESSION_ID"
 ```
 
+## Command Line Options
+
+Available CLI arguments:
+```bash
+python -m aws_mcp_server.server [options]
+
+Options:
+  --sse                    Use SSE transport (HTTP API mode)
+  --port PORT             Port to run the server on (default: 8888)
+  --enable-vector-store   Enable vector store features
+  --data-source PATH      Path to data source directory (default: datasource/)
+  --log-file PATH         Path to log file (default: logs/aws_mcp_server.log)
+```
+
 ## Environment Configuration
 
 Set environment variables to customize server behavior:
 
 ```bash
-# Server settings
-export AWS_MCP_PORT=8888
-export AWS_MCP_HOST=0.0.0.0
-export AWS_MCP_DEBUG=true
-
 # AWS settings
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_PROFILE=default
@@ -173,6 +187,10 @@ export AWS_PROFILE=default
 # Vector store (optional)
 export ENABLE_VECTOR_STORE=true
 export CHROMA_DB_PATH=./chroma_db
+export DATA_SOURCE_PATH=./datasource
+
+# Logging
+export AWS_MCP_DEBUG=true
 ```
 
 ## Testing Different AWS Profiles

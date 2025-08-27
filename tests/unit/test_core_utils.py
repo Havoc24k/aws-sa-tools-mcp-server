@@ -7,9 +7,7 @@ import pytest
 
 from aws_mcp_server.core.utils import (
     build_params,
-    chunk_list,
     create_aws_client,
-    format_aws_timestamp,
     format_filters,
     merge_filters,
     paginate_results,
@@ -86,41 +84,8 @@ class TestValidateAWSIdentifier:
         )  # Underscore not alphanumeric
 
 
-class TestFormatAWSTimestamp:
-    """Test format_aws_timestamp function with pattern matching."""
-
-    def test_none_input(self):
-        """Test None input returns None."""
-        assert format_aws_timestamp(None) is None
-
-    def test_datetime_input(self):
-        """Test datetime input."""
-        dt = datetime(2023, 1, 1, 12, 0, 0)
-        result = format_aws_timestamp(dt)
-        assert result == "2023-01-01T12:00:00"
-
-    def test_iso_string_input(self):
-        """Test ISO string input."""
-        iso_string = "2023-01-01T12:00:00"
-        result = format_aws_timestamp(iso_string)
-        assert result == "2023-01-01T12:00:00"
-
-    def test_utc_string_input(self):
-        """Test UTC string with Z suffix."""
-        utc_string = "2023-01-01T12:00:00Z"
-        result = format_aws_timestamp(utc_string)
-        assert result == "2023-01-01T12:00:00+00:00"
-
-    def test_invalid_string_input(self):
-        """Test invalid string input."""
-        invalid_string = "not-a-date"
-        result = format_aws_timestamp(invalid_string)
-        assert result == "not-a-date"
-
-    def test_other_input_types(self):
-        """Test other input types."""
-        assert format_aws_timestamp(123) == "123"
-        assert format_aws_timestamp(12.34) == "12.34"
+# Note: TestFormatAWSTimestamp class removed - function no longer exists
+# AWS SDK handles timestamp formatting automatically
 
 
 class TestMergeFilters:
@@ -241,32 +206,36 @@ class TestFormatFilters:
         assert result == expected
 
 
-class TestChunkList:
-    """Test chunk_list function."""
+class TestIterToolsBatched:
+    """Test using itertools.batched instead of custom chunk_list function."""
 
-    def test_simple_chunk(self):
-        """Test chunking a simple list."""
+    def test_simple_batch(self):
+        """Test batching a simple list using itertools.batched."""
+        import itertools
         items = [1, 2, 3, 4, 5]
-        result = chunk_list(items, 2)
-        expected = [[1, 2], [3, 4], [5]]
+        result = list(itertools.batched(items, 2))
+        expected = [(1, 2), (3, 4), (5,)]
         assert result == expected
 
-    def test_exact_chunks(self):
-        """Test when list divides evenly into chunks."""
+    def test_exact_batches(self):
+        """Test when list divides evenly into batches."""
+        import itertools
         items = [1, 2, 3, 4]
-        result = chunk_list(items, 2)
-        expected = [[1, 2], [3, 4]]
+        result = list(itertools.batched(items, 2))
+        expected = [(1, 2), (3, 4)]
         assert result == expected
 
     def test_empty_list(self):
         """Test with empty list."""
-        result = chunk_list([], 2)
+        import itertools
+        result = list(itertools.batched([], 2))
         assert result == []
 
     def test_single_item(self):
         """Test with single item."""
-        result = chunk_list([1], 2)
-        assert result == [[1]]
+        import itertools
+        result = list(itertools.batched([1], 2))
+        assert result == [(1,)]
 
 
 class TestCreateAWSClient:

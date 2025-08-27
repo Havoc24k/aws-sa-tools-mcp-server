@@ -1,4 +1,4 @@
-"""Unit tests for simplified configuration settings."""
+"""Unit tests for modern configuration system."""
 
 import os
 from unittest.mock import patch
@@ -6,29 +6,28 @@ from unittest.mock import patch
 import pytest
 
 
-class TestSimplifiedSettings:
-    """Test simplified configuration settings."""
+class TestModernConfig:
+    """Test modern dataclass-based configuration."""
 
-    def test_settings_defaults(self):
-        """Test that default settings are loaded correctly."""
+    def test_config_defaults(self):
+        """Test that default config values are correct."""
         with patch.dict(os.environ, {}, clear=True):
-            import importlib
+            from aws_mcp_server.core.config import AWSConfig, ServerConfig
 
-            from aws_mcp_server.config import settings as settings_module
-
-            importlib.reload(settings_module)
+            server_config = ServerConfig()
+            aws_config = AWSConfig()
 
             # Test default values
-            assert settings_module.DEFAULT_PORT == 8888
-            assert settings_module.DEFAULT_TRANSPORT == "stdio"
-            assert settings_module.DEBUG is False
-            assert settings_module.MAX_CONCURRENT_REQUESTS == 10
-            assert settings_module.ENABLE_PAGINATION is True
-            assert settings_module.DEFAULT_MAX_RESULTS == 1000
-            assert settings_module.DEFAULT_TIMEOUT_SECONDS == 30
+            assert server_config.port == 8888
+            assert server_config.transport == "stdio"
+            assert server_config.debug is False
+            assert aws_config.max_concurrent == 10
+            assert aws_config.enable_pagination is True
+            assert aws_config.max_results == 1000
+            assert aws_config.timeout_seconds == 30
 
-    def test_settings_from_environment_variables(self):
-        """Test that settings can be overridden by environment variables."""
+    def test_config_from_environment_variables(self):
+        """Test that config can be overridden by environment variables."""
         env_vars = {
             "AWS_MCP_PORT": "9999",
             "AWS_MCP_TRANSPORT": "sse",
@@ -40,21 +39,20 @@ class TestSimplifiedSettings:
         }
 
         with patch.dict(os.environ, env_vars, clear=True):
-            import importlib
+            from aws_mcp_server.core.config import AWSConfig, ServerConfig
 
-            from aws_mcp_server.config import settings as settings_module
+            server_config = ServerConfig()
+            aws_config = AWSConfig()
 
-            importlib.reload(settings_module)
+            assert server_config.port == 9999
+            assert server_config.transport == "sse"
+            assert server_config.debug is True
+            assert aws_config.max_concurrent == 20
+            assert aws_config.enable_pagination is False
+            assert aws_config.max_results == 2000
+            assert aws_config.timeout_seconds == 60
 
-            assert settings_module.DEFAULT_PORT == 9999
-            assert settings_module.DEFAULT_TRANSPORT == "sse"
-            assert settings_module.DEBUG is True
-            assert settings_module.MAX_CONCURRENT_REQUESTS == 20
-            assert settings_module.ENABLE_PAGINATION is False
-            assert settings_module.DEFAULT_MAX_RESULTS == 2000
-            assert settings_module.DEFAULT_TIMEOUT_SECONDS == 60
-
-    def test_settings_debug_variations(self):
+    def test_config_debug_variations(self):
         """Test different debug value variations."""
         debug_values = [
             ("true", True),
@@ -69,14 +67,12 @@ class TestSimplifiedSettings:
 
         for value, expected in debug_values:
             with patch.dict(os.environ, {"AWS_MCP_DEBUG": value}, clear=True):
-                import importlib
+                from aws_mcp_server.core.config import ServerConfig
 
-                from aws_mcp_server.config import settings as settings_module
+                config = ServerConfig()
+                assert config.debug is expected, f"Failed for value: {value}"
 
-                importlib.reload(settings_module)
-                assert settings_module.DEBUG is expected, f"Failed for value: {value}"
-
-    def test_settings_pagination_variations(self):
+    def test_config_pagination_variations(self):
         """Test different pagination value variations."""
         pagination_values = [
             ("true", True),
@@ -93,86 +89,72 @@ class TestSimplifiedSettings:
             with patch.dict(
                 os.environ, {"AWS_MCP_ENABLE_PAGINATION": value}, clear=True
             ):
-                import importlib
+                from aws_mcp_server.core.config import AWSConfig
 
-                from aws_mcp_server.config import settings as settings_module
-
-                importlib.reload(settings_module)
-                assert settings_module.ENABLE_PAGINATION is expected, (
+                config = AWSConfig()
+                assert config.enable_pagination is expected, (
                     f"Failed for value: {value}"
                 )
 
-    def test_settings_invalid_port(self):
-        """Test settings with invalid port value."""
+    def test_config_invalid_port(self):
+        """Test config with invalid port value."""
         with patch.dict(os.environ, {"AWS_MCP_PORT": "invalid"}, clear=True):
             with pytest.raises(ValueError):
-                import importlib
+                from aws_mcp_server.core.config import ServerConfig
 
-                from aws_mcp_server.config import settings as settings_module
+                ServerConfig()
 
-                importlib.reload(settings_module)
-
-    def test_settings_invalid_max_concurrent(self):
-        """Test settings with invalid max_concurrent value."""
+    def test_config_invalid_max_concurrent(self):
+        """Test config with invalid max_concurrent value."""
         with patch.dict(os.environ, {"AWS_MCP_MAX_CONCURRENT": "invalid"}, clear=True):
             with pytest.raises(ValueError):
-                import importlib
+                from aws_mcp_server.core.config import AWSConfig
 
-                from aws_mcp_server.config import settings as settings_module
+                AWSConfig()
 
-                importlib.reload(settings_module)
+    def test_config_structure(self):
+        """Test that config classes have required attributes."""
+        from aws_mcp_server.core.config import AWSConfig, ServerConfig
 
-    def test_constants_structure(self):
-        """Test that required constants exist."""
-        from aws_mcp_server.config import settings as settings_module
+        server_config = ServerConfig()
+        aws_config = AWSConfig()
 
-        # Test that essential settings exist
-        assert hasattr(settings_module, "DEFAULT_PORT")
-        assert hasattr(settings_module, "DEFAULT_TRANSPORT")
-        assert hasattr(settings_module, "DEBUG")
-        assert hasattr(settings_module, "MAX_CONCURRENT_REQUESTS")
-        assert hasattr(settings_module, "ENABLE_PAGINATION")
-        assert hasattr(settings_module, "DEFAULT_MAX_RESULTS")
-        assert hasattr(settings_module, "DEFAULT_TIMEOUT_SECONDS")
+        # Test that essential config attributes exist
+        assert hasattr(server_config, "port")
+        assert hasattr(server_config, "transport")
+        assert hasattr(server_config, "debug")
+        assert hasattr(aws_config, "max_concurrent")
+        assert hasattr(aws_config, "enable_pagination")
+        assert hasattr(aws_config, "max_results")
+        assert hasattr(aws_config, "timeout_seconds")
 
         # Test types
-        assert isinstance(settings_module.DEFAULT_PORT, int)
-        assert isinstance(settings_module.DEFAULT_TRANSPORT, str)
-        assert isinstance(settings_module.DEBUG, bool)
-        assert isinstance(settings_module.MAX_CONCURRENT_REQUESTS, int)
-        assert isinstance(settings_module.ENABLE_PAGINATION, bool)
-        assert isinstance(settings_module.DEFAULT_MAX_RESULTS, int)
-        assert isinstance(settings_module.DEFAULT_TIMEOUT_SECONDS, int)
+        assert isinstance(server_config.port, int)
+        assert isinstance(server_config.transport, str)
+        assert isinstance(server_config.debug, bool)
+        assert isinstance(aws_config.max_concurrent, int)
+        assert isinstance(aws_config.enable_pagination, bool)
+        assert isinstance(aws_config.max_results, int)
+        assert isinstance(aws_config.timeout_seconds, int)
 
     def test_environment_case_sensitivity(self):
         """Test that environment variable names are case sensitive."""
         # Test lowercase (should not work)
         with patch.dict(os.environ, {"aws_mcp_port": "9999"}, clear=True):
-            import importlib
+            from aws_mcp_server.core.config import ServerConfig
 
-            from aws_mcp_server.config import settings as settings_module
-
-            importlib.reload(settings_module)
+            config = ServerConfig()
             # Should use default since lowercase env var is ignored
-            assert settings_module.DEFAULT_PORT == 8888
+            assert config.port == 8888
 
     def test_edge_cases(self):
         """Test edge cases for configuration values."""
-        # Test zero values
-        env_vars = {
-            "AWS_MCP_MAX_RESULTS": "0",
-            "AWS_MCP_TIMEOUT": "0",
-        }
+        # Test zero values - should raise validation error
+        with patch.dict(os.environ, {"AWS_MCP_MAX_RESULTS": "0"}, clear=True):
+            with pytest.raises(ValueError):
+                from aws_mcp_server.core.config import AWSConfig
 
-        with patch.dict(os.environ, env_vars, clear=True):
-            import importlib
-
-            from aws_mcp_server.config import settings as settings_module
-
-            importlib.reload(settings_module)
-
-            assert settings_module.DEFAULT_MAX_RESULTS == 0
-            assert settings_module.DEFAULT_TIMEOUT_SECONDS == 0
+                AWSConfig()
 
         # Test very large values
         env_vars = {
@@ -181,11 +163,25 @@ class TestSimplifiedSettings:
         }
 
         with patch.dict(os.environ, env_vars, clear=True):
-            import importlib
+            from aws_mcp_server.core.config import AWSConfig
 
-            from aws_mcp_server.config import settings as settings_module
+            config = AWSConfig()
 
-            importlib.reload(settings_module)
+            assert config.max_results == 999999
+            assert config.timeout_seconds == 3600
 
-            assert settings_module.DEFAULT_MAX_RESULTS == 999999
-            assert settings_module.DEFAULT_TIMEOUT_SECONDS == 3600
+    def test_config_validation(self):
+        """Test configuration validation."""
+        # Test invalid port range
+        with patch.dict(os.environ, {"AWS_MCP_PORT": "80"}, clear=True):
+            with pytest.raises(ValueError):
+                from aws_mcp_server.core.config import ServerConfig
+
+                ServerConfig()
+
+        # Test invalid transport
+        with patch.dict(os.environ, {"AWS_MCP_TRANSPORT": "invalid"}, clear=True):
+            with pytest.raises(ValueError):
+                from aws_mcp_server.core.config import ServerConfig
+
+                ServerConfig()
