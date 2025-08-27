@@ -1,14 +1,8 @@
 """Utility functions for AWS MCP server."""
 
-from datetime import datetime
 from typing import Any
 
 import boto3
-
-
-def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
-    """Remove None values from dictionary (simplified approach)."""
-    return {k: v for k, v in data.items() if v is not None}
 
 
 def validate_aws_identifier(identifier: str) -> bool:
@@ -56,13 +50,24 @@ def create_aws_client(profile_name: str, region: str, service_name: str) -> Any:
 def build_params(**kwargs: Any) -> dict[str, Any]:
     """Build parameter dictionary excluding None values.
 
+    Can also be used to sanitize existing dictionaries by unpacking them.
+
     Args:
         **kwargs: Parameters to include in the dict
 
     Returns:
         Dictionary with non-None values
+
+    Example:
+        build_params(param1=value1, param2=None, param3=value3)  # {param1: value1, param3: value3}
+        build_params(**existing_dict)  # Sanitizes existing dictionary
     """
     return {k: v for k, v in kwargs.items() if v is not None}
+
+
+def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Remove None values from dictionary (alias for build_params for backwards compatibility)."""
+    return build_params(**data)
 
 
 def format_filters(filters: dict[str, Any] | None) -> list | None:

@@ -212,6 +212,7 @@ class TestIterToolsBatched:
     def test_simple_batch(self):
         """Test batching a simple list using itertools.batched."""
         import itertools
+
         items = [1, 2, 3, 4, 5]
         result = list(itertools.batched(items, 2))
         expected = [(1, 2), (3, 4), (5,)]
@@ -220,6 +221,7 @@ class TestIterToolsBatched:
     def test_exact_batches(self):
         """Test when list divides evenly into batches."""
         import itertools
+
         items = [1, 2, 3, 4]
         result = list(itertools.batched(items, 2))
         expected = [(1, 2), (3, 4)]
@@ -228,12 +230,14 @@ class TestIterToolsBatched:
     def test_empty_list(self):
         """Test with empty list."""
         import itertools
+
         result = list(itertools.batched([], 2))
         assert result == []
 
     def test_single_item(self):
         """Test with single item."""
         import itertools
+
         result = list(itertools.batched([1], 2))
         assert result == [(1,)]
 

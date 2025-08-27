@@ -62,11 +62,17 @@ def validate_region(region: str) -> bool:
         True if region is valid, False otherwise
     """
     try:
-        return region in boto3.Session().get_available_regions('ec2')
+        return region in boto3.Session().get_available_regions("ec2")
     except Exception:
         # Fallback to common regions if boto3 call fails
         common_regions = {
-            "us-east-1", "us-east-2", "us-west-1", "us-west-2",
-            "eu-west-1", "eu-central-1", "ap-southeast-1", "ap-northeast-1"
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+            "eu-west-1",
+            "eu-central-1",
+            "ap-southeast-1",
+            "ap-northeast-1",
         }
         return region in common_regions

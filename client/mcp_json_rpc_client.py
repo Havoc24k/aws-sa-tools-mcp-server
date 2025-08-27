@@ -45,9 +45,17 @@ class ClientAction(Enum):
 class MCPRemoteClient:
     """Remote MCP client using FastMCP's HTTP client."""
 
-    def __init__(self, host: str = "localhost", port: int = 8888):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8888,
+        profile: str = "default",
+        region: str = "us-east-1",
+    ):
         self.host = host
         self.port = port
+        self.profile = profile
+        self.region = region
         base_url = f"http://{host}:{port}"
         self.url = urljoin(base_url, "/sse")
         # Connect to SSE endpoint for remote MCP server
@@ -209,8 +217,9 @@ class MCPRemoteClient:
         print("  call <tool_name> <json_args> - Call a tool with JSON arguments")
         print("  quit/exit/q - Exit interactive mode")
         print(
-            '\nExample: call s3-list_buckets {"profile_name": "default", "region": "us-east-1"}'
+            f'\nExample: call s3-list_buckets {{"profile_name": "{self.profile}", "region": "{self.region}"}}'
         )
+        print(f"Current defaults: profile={self.profile}, region={self.region}")
 
     async def _show_tools_interactive(self) -> None:
         """Show tools in interactive mode."""
@@ -220,6 +229,15 @@ class MCPRemoteClient:
             desc = self._truncate_description(tool["description"])
             print(f"  • {tool['name']}: {desc}")
 
+    def _auto_populate_aws_args(self, args: dict[str, Any]) -> dict[str, Any]:
+        """Auto-populate AWS profile and region if not provided."""
+        # Always add defaults if not specified by user
+        if "profile_name" not in args:
+            args["profile_name"] = self.profile
+        if "region" not in args:
+            args["region"] = self.region
+        return args
+
     async def _handle_tool_call_interactive(
         self, call_args: str, tool_names: list[str]
     ) -> None:
@@ -227,6 +245,9 @@ class MCPRemoteClient:
         parts = call_args.split(" ", 1)
         if len(parts) != 2:
             print("Usage: call <tool_name> <json_args>")
+            print(
+                f"Tip: Current defaults - profile={self.profile}, region={self.region}"
+            )
             return
 
         tool_name, args_str = parts
@@ -237,6 +258,19 @@ class MCPRemoteClient:
 
         try:
             args = self._parse_json_args(args_str)
+            # Auto-populate AWS parameters for convenience
+            original_args = args.copy()
+            args = self._auto_populate_aws_args(args)
+
+            # Show what was auto-populated
+            added_params = []
+            if "profile_name" not in original_args:
+                added_params.append(f"profile_name={self.profile}")
+            if "region" not in original_args:
+                added_params.append(f"region={self.region}")
+            if added_params:
+                print(f"💡 Auto-populated: {', '.join(added_params)}")
+
             result = await self.call_tool(tool_name, args)
 
             # Extract actual JSON data from CallToolResult
@@ -359,7 +393,9 @@ Examples:
     print(f"Action: {args.action}")
     print(f"AWS Profile: {args.profile}, Region: {args.region}")
 
-    client = MCPRemoteClient(host=args.host, port=args.port)
+    client = MCPRemoteClient(
+        host=args.host, port=args.port, profile=args.profile, region=args.region
+    )
     kwargs = {"profile": args.profile, "region": args.region}
 
     try:

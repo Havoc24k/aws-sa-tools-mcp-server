@@ -36,8 +36,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # Set up logging with file output
-    setup_logging(level="INFO", include_timestamp=False,
-                  log_file=args.log_file)
+    setup_logging(level="INFO", include_timestamp=False, log_file=args.log_file)
 
     # Set environment variables for vector store based on CLI flags
     os.environ["ENABLE_VECTOR_STORE"] = str(args.enable_vector_store).lower()

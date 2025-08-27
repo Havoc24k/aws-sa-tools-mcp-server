@@ -27,9 +27,11 @@ class TestAwsRegions:
 
     def test_get_all_regions_fallback(self):
         """Test get_all_regions fallback when boto3 fails"""
-        with patch('boto3.Session') as mock_session:
+        with patch("boto3.Session") as mock_session:
             # Make boto3.Session().get_available_regions() raise an exception
-            mock_session.return_value.get_available_regions.side_effect = Exception("Mock error")
+            mock_session.return_value.get_available_regions.side_effect = Exception(
+                "Mock error"
+            )
 
             # Clear the cache to force re-execution
             get_all_regions.cache_clear()
